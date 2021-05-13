@@ -1,6 +1,7 @@
 package com.utopia.bookingservice.entity;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -9,13 +10,14 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "flight")
-@Data
 public class Flight {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,4 +36,7 @@ public class Flight {
 
     @Column(name = "is_active")
     private Boolean active;
+
+    @OneToMany(mappedBy = "flight")
+    private List<Passenger> passengers;
 }

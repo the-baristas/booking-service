@@ -13,9 +13,9 @@ import javax.persistence.Table;
 
 import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "passenger")
-@Data
 public class Passenger {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
