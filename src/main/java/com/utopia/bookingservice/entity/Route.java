@@ -11,28 +11,23 @@ import javax.persistence.Table;
 
 import lombok.Data;
 
-@Data
 @Entity
-@Table(name = "booking")
-public class Booking {
+@Table(name = "route")
+@Data
+public class Route {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "is_active")
-    private Boolean active;
-
-    @Column(name = "confirmation_code")
-    private String confirmationCode;
-
-    @Column(name = "layover_count")
-    private Integer layoverCount;
-
-    @Column(name = "total_price")
-    private Double totalPrice;
+    @ManyToOne
+    @JoinColumn(name = "origin_id")
+    private Airport originAirport;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "destination_id")
+    private Airport destinationAirport;
+
+    @Column(name = "is_active")
+    private Boolean active;
 }

@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import com.utopia.bookingservice.dto.BookingDto;
 import com.utopia.bookingservice.entity.Booking;
+import com.utopia.bookingservice.exception.ModelMapperFailedException;
 import com.utopia.bookingservice.service.BookingService;
 
 import org.modelmapper.ModelMapper;
@@ -41,9 +42,9 @@ public class BookingController {
         return ResponseEntity.ok(bookingDtos);
     }
 
-    @GetMapping
-    public ResponseEntity<List<BookingDto>> findByModelContaining(
-            @RequestParam String confirmationCode) {
+    @GetMapping("search")
+    public ResponseEntity<List<BookingDto>> findBookingsByModelContaining(
+            @RequestParam("confirmation_code") String confirmationCode) {
         List<Booking> bookings = bookingService
                 .findByConfirmationCodeContaining(confirmationCode);
         List<BookingDto> bookingDtos = bookings.stream().map(this::convertToDto)

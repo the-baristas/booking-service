@@ -1,4 +1,4 @@
-package com.utopia.bookingservice.controller;
+package com.utopia.bookingservice.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;

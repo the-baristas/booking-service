@@ -35,7 +35,7 @@ public class BookingServiceTest {
         bookingDto.setId(1L);
         bookingDto.setActive(Boolean.TRUE);
         bookingDto.setConfirmationCode("a");
-        bookingDto.setLayoverCount(0L);
+        bookingDto.setLayoverCount(0);
         bookingDto.setTotalPrice(0.01);
         Booking booking = modelMapper.map(bookingDto, Booking.class);
         List<Booking> bookings = Arrays.asList(booking);
@@ -50,7 +50,7 @@ public class BookingServiceTest {
         BookingDto bookingDto = new BookingDto();
         bookingDto.setActive(Boolean.TRUE);
         bookingDto.setConfirmationCode("a");
-        bookingDto.setLayoverCount(0L);
+        bookingDto.setLayoverCount(0);
         bookingDto.setTotalPrice(0.01);
         Booking booking = modelMapper.map(bookingDto, Booking.class);
 
@@ -58,7 +58,7 @@ public class BookingServiceTest {
         savedBookingDto.setId(1L);
         savedBookingDto.setActive(Boolean.TRUE);
         savedBookingDto.setConfirmationCode("a");
-        savedBookingDto.setLayoverCount(0L);
+        savedBookingDto.setLayoverCount(0);
         savedBookingDto.setTotalPrice(0.01);
         Booking savedBooking = modelMapper.map(savedBookingDto, Booking.class);
         when(bookingRepository.save(booking)).thenReturn(savedBooking);

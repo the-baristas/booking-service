@@ -20,8 +20,10 @@ public class BookingService {
         return bookingRepository.findAll();
     }
 
-    public List<Booking> findByConfirmationCodeContaining(String confirmationCode) {
-        return bookingRepository.findByConfirmationCodeContaining(confirmationCode);
+    public List<Booking> findByConfirmationCodeContaining(
+            String confirmationCode) {
+        return bookingRepository
+                .findByConfirmationCodeContaining(confirmationCode);
     }
 
     public Booking createBooking(Booking booking) {
@@ -29,7 +31,7 @@ public class BookingService {
             return bookingRepository.save(booking);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Could not craete booking with id: " + booking.getId(), e);
+                    "Could not create booking with id: " + booking.getId(), e);
         }
     }
 

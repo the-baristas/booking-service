@@ -23,8 +23,11 @@ public class BookingDto {
     private String confirmationCode;
 
     @PositiveOrZero
-    private Long layoverCount;
+    private Integer layoverCount;
 
     @PositiveOrZero
     private Double totalPrice;
+
+    @NotBlank
+    private String username;
 }
