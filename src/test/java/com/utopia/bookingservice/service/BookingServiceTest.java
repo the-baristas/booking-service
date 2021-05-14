@@ -46,7 +46,7 @@ public class BookingServiceTest {
     }
 
     @Test
-    public void createAirplane_Airplane_AirplaneSaved() {
+    public void createBooking_Booking_BookingSaved() {
         BookingDto bookingDto = new BookingDto();
         bookingDto.setActive(Boolean.TRUE);
         bookingDto.setConfirmationCode("a");

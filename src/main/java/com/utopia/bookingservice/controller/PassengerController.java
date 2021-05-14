@@ -11,8 +11,11 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -141,13 +144,33 @@ public class PassengerController {
         } catch (ParseException e) {
             throw new ModelMapperFailedException(e);
         }
-        System.out.println(passenger);
         Passenger createdPassenger = passengerService
                 .createPassenger(passenger);
         return ResponseEntity
                 .created(builder.path("/passengers/{id}")
                         .build(passengerDto.getId()))
                 .body(convertPassengerToDto(createdPassenger));
+    }
+
+    @PutMapping("{id}")
+    public ResponseEntity<PassengerDto> updatePassenger(
+            @RequestBody PassengerDto passengerDto,
+            UriComponentsBuilder builder) {
+        Passenger passenger;
+        try {
+            passenger = convertDtoToPassenger(passengerDto);
+        } catch (ParseException e) {
+            throw new ModelMapperFailedException(e);
+        }
+        Passenger updatedPassenger = passengerService
+                .updatePassenger(passenger);
+        return ResponseEntity.ok(convertPassengerToDto(updatedPassenger));
+    }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<Void> deletePassengerById(@PathVariable Long id) {
+        passengerService.deletePassengerById(id);
+        return ResponseEntity.noContent().build();
     }
 
     private PassengerDto convertPassengerToDto(Passenger passenger) {

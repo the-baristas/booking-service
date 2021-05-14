@@ -32,4 +32,19 @@ public class PassengerService {
                     e);
         }
     }
+
+    public Passenger updatePassenger(Passenger passenger) {
+        passengerRepository.findById(passenger.getId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Could not find passenger with id="
+                                + passenger.getId()));
+        return passengerRepository.save(passenger);
+    }
+
+    public void deletePassengerById(Long id) {
+        passengerRepository.findById(id).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Could not find passenger with id=" + id));
+        passengerRepository.deleteById(id);
+    }
 }
