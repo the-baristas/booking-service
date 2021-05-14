@@ -38,25 +38,25 @@ public class BookingService {
     public Booking updateBooking(Long id, Booking booking) {
         bookingRepository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Could not find airplane with id: " + id));
+                        "Could not find booking with id: " + id));
         booking.setId(id);
         try {
             return bookingRepository.save(booking);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Could not update airplane with id: " + booking.getId(), e);
+                    "Could not update booking with id: " + booking.getId(), e);
         }
     }
 
     public void deleteBookingById(Long id) throws ResponseStatusException {
         bookingRepository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Could not find airplane with id = " + id));
+                        "Could not find booking with id = " + id));
         try {
             bookingRepository.deleteById(id);
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Could not delete airplane with id: " + id, exception);
+                    "Could not delete booking with id: " + id, exception);
         }
     }
 }

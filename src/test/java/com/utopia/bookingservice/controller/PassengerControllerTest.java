@@ -1,10 +1,11 @@
 package com.utopia.bookingservice.controller;
 
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Arrays;
@@ -81,5 +82,31 @@ public class PassengerControllerTest {
                 .exchange().expectStatus().isCreated().expectHeader()
                 .contentType(MediaType.APPLICATION_JSON)
                 .expectBody(PassengerDto.class).isEqualTo(passengerDto);
+    }
+
+    @Test
+    public void updatePassenger_ValidPassenger_PassengerUpdated() {
+        Passenger passenger = new Passenger();
+        Long id = 1L;
+        passenger.setId(id);
+        when(passengerService.updatePassenger(passenger)).thenReturn(passenger);
+        PassengerDto passengerDto = modelMapper.map(passenger,
+                PassengerDto.class);
+
+        webTestClient.put().uri("/passengers/{id}", id)
+                .contentType(MediaType.APPLICATION_JSON).bodyValue(passengerDto)
+                .exchange().expectStatus().isOk().expectHeader()
+                .contentType(MediaType.APPLICATION_JSON)
+                .expectBody(PassengerDto.class).isEqualTo(passengerDto);
+    }
+
+    @Test
+    public void deletePassengerById_ValidId_PassengerDeleted() {
+        Passenger passenger = new Passenger();
+        Long id = 1L;
+        passenger.setId(id);
+
+        passengerService.deletePassengerById(id);
+        verify(passengerService, times(1)).deletePassengerById(id);
     }
 }

@@ -2,9 +2,12 @@ package com.utopia.bookingservice.service;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import com.utopia.bookingservice.entity.Airport;
 import com.utopia.bookingservice.entity.Booking;
@@ -62,7 +65,6 @@ public class PassengerServiceTest {
 
         Page<Passenger> foundPassengers = passengerService.findAllPassengers(0,
                 1);
-        System.out.println(foundPassengers);
         assertThat(passengers, is(foundPassengers));
     }
 
@@ -76,5 +78,32 @@ public class PassengerServiceTest {
         Passenger newPassenger = passengerService
                 .createPassenger(passengerToSave);
         assertThat(newPassenger, is(savedPassenger));
+    }
+
+    @Test
+    public void updatePassenger_ValidPassenger_PassengerUpdated() {
+        Passenger updatingPassenger = new Passenger();
+        Long id = 1L;
+        updatingPassenger.setId(id);
+        Optional<Passenger> passengerOptional = Optional.of(updatingPassenger);
+        when(passengerRepository.findById(id)).thenReturn(passengerOptional);
+        when(passengerRepository.save(updatingPassenger))
+                .thenReturn(updatingPassenger);
+
+        Passenger updatedPassenger = passengerService
+                .updatePassenger(updatingPassenger);
+        assertThat(updatedPassenger, is(updatingPassenger));
+    }
+
+    @Test
+    public void deletePassengerById_ValidId_PassengerDeleted() {
+        Passenger passenger = new Passenger();
+        Long id = 1L;
+        passenger.setId(id);
+        Optional<Passenger> passengerOptional = Optional.of(passenger);
+        when(passengerRepository.findById(id)).thenReturn(passengerOptional);
+
+        passengerService.deletePassengerById(id);
+        verify(passengerRepository, times(1)).deleteById(id);
     }
 }
