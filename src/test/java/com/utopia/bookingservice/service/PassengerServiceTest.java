@@ -38,7 +38,7 @@ public class PassengerServiceTest {
     ModelMapper modelMapper;
 
     @Test
-    public void findAllPassengers_PassengersFound() {
+    public void findAll_PassengersFound() {
         Passenger passenger = new Passenger();
         passenger.setId(1L);
         Booking booking = new Booking();
@@ -58,14 +58,51 @@ public class PassengerServiceTest {
         originAirport.setActive(Boolean.TRUE);
         route.setOriginAirport(originAirport);
         flight.setRoute(route);
-        Page<Passenger> passengers = new PageImpl<Passenger>(
+        Page<Passenger> passengersPage = new PageImpl<Passenger>(
                 Arrays.asList(passenger));
         when(passengerRepository.findAll(PageRequest.of(0, 1)))
-                .thenReturn(passengers);
+                .thenReturn(passengersPage);
 
-        Page<Passenger> foundPassengers = passengerService.findAllPassengers(0,
-                1);
-        assertThat(passengers, is(foundPassengers));
+        Page<Passenger> foundPassengersPage = passengerService.findAll(0, 1);
+        assertThat(foundPassengersPage, is(passengersPage));
+    }
+
+    @Test
+    public void findByConfirmationCodeOrUsernameContaining_ValidSearchTerm_PassengersFound() {
+        Passenger passenger = new Passenger();
+        passenger.setId(1L);
+        Page<Passenger> passengersPage = new PageImpl<Passenger>(
+                Arrays.asList(passenger));
+        String searchTerm = "a";
+        Integer pageIndex = 0;
+        Integer pageSize = 1;
+        when(passengerRepository.findByConfirmationCodeOrUsernameContaining(
+                searchTerm, PageRequest.of(pageIndex, pageSize)))
+                        .thenReturn(passengersPage);
+
+        Page<Passenger> foundPassengersPage = passengerService
+                .findByConfirmationCodeOrUsernameContaining(searchTerm,
+                        pageIndex, pageSize);
+        assertThat(foundPassengersPage, is(passengersPage));
+    }
+
+    @Test
+    public void findDistinctByConfirmationCodeOrUsernameContaining_ValidSearchTerm_PassengersFound() {
+        Passenger passenger = new Passenger();
+        passenger.setId(1L);
+        Page<Passenger> passengersPage = new PageImpl<Passenger>(
+                Arrays.asList(passenger));
+        String searchTerm = "a";
+        Integer pageIndex = 0;
+        Integer pageSize = 1;
+        when(passengerRepository.findDistinctByConfirmationCodeOrUsernameContaining(
+                searchTerm, PageRequest.of(pageIndex, pageSize)))
+                        .thenReturn(passengersPage);
+
+        Page<Passenger> foundPassengersPage = passengerService
+                .findDistinctByConfirmationCodeOrUsernameContaining(searchTerm,
+                        pageIndex, pageSize);
+        assertThat(foundPassengersPage, is(passengersPage));
     }
 
     @Test
@@ -75,8 +112,7 @@ public class PassengerServiceTest {
         when(passengerRepository.save(passengerToSave))
                 .thenReturn(savedPassenger);
 
-        Passenger newPassenger = passengerService
-                .createPassenger(passengerToSave);
+        Passenger newPassenger = passengerService.create(passengerToSave);
         assertThat(newPassenger, is(savedPassenger));
     }
 
@@ -90,8 +126,7 @@ public class PassengerServiceTest {
         when(passengerRepository.save(updatingPassenger))
                 .thenReturn(updatingPassenger);
 
-        Passenger updatedPassenger = passengerService
-                .updatePassenger(updatingPassenger);
+        Passenger updatedPassenger = passengerService.update(updatingPassenger);
         assertThat(updatedPassenger, is(updatingPassenger));
     }
 
@@ -103,7 +138,7 @@ public class PassengerServiceTest {
         Optional<Passenger> passengerOptional = Optional.of(passenger);
         when(passengerRepository.findById(id)).thenReturn(passengerOptional);
 
-        passengerService.deletePassengerById(id);
+        passengerService.deleteById(id);
         verify(passengerRepository, times(1)).deleteById(id);
     }
 }

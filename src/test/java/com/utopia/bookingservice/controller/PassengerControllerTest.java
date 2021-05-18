@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.Arrays;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utopia.bookingservice.dto.PassengerDto;
 import com.utopia.bookingservice.entity.Passenger;
@@ -47,33 +48,81 @@ public class PassengerControllerTest {
     }
 
     @Test
-    public void findAllPassengers_PassengersFound() throws Exception {
+    public void findAllPassengers_PassengersFound()
+            throws JsonProcessingException, Exception {
         Passenger passenger = new Passenger();
         Page<Passenger> foundPassengers = new PageImpl<Passenger>(
                 Arrays.asList(passenger));
-        when(passengerService.findAllPassengers(0, 1))
-                .thenReturn(foundPassengers);
-        Page<PassengerDto> foundPassengerDtos = foundPassengers
+        when(passengerService.findAll(0, 1)).thenReturn(foundPassengers);
+        Page<PassengerDto> foundPassengerDtosPage = foundPassengers
                 .map((Passenger p) -> modelMapper.map(p, PassengerDto.class));
 
         webTestClient.get().uri("/passengers?index=0&size=1")
                 .accept(MediaType.APPLICATION_JSON).exchange().expectStatus()
                 .isOk().expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBody(String.class).isEqualTo(new ObjectMapper()
-                        .writeValueAsString(foundPassengerDtos));
+                        .writeValueAsString(foundPassengerDtosPage));
 
         mockMvc.perform(get("/passengers?index=0&size=1")
                 .contentType(MediaType.APPLICATION_JSON)).andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().string(new ObjectMapper()
-                        .writeValueAsString(foundPassengerDtos)));
+                        .writeValueAsString(foundPassengerDtosPage)));
+    }
+
+    @Test
+    public void findByConfirmationCodeOrUsernameContaining_ValidSearchTerm_PassengersFound()
+            throws JsonProcessingException, Exception {
+        Passenger passenger = new Passenger();
+        Page<Passenger> foundPassengersPage = new PageImpl<Passenger>(
+                Arrays.asList(passenger));
+        String searchTerm = "a";
+        Integer pageIndex = 0;
+        Integer pageSize = 1;
+        when(passengerService.findByConfirmationCodeOrUsernameContaining(
+                searchTerm, pageIndex, pageSize))
+                        .thenReturn(foundPassengersPage);
+        Page<PassengerDto> foundPassengerDtosPage = foundPassengersPage
+                .map((Passenger p) -> modelMapper.map(p, PassengerDto.class));
+
+        mockMvc.perform(
+                get("/passengers/search?term={searchTerm}&index=0&size=1", searchTerm)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print()).andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().string(new ObjectMapper()
+                        .writeValueAsString(foundPassengerDtosPage)));
+    }
+
+    @Test
+    public void findDistinctByConfirmationCodeOrUsernameContaining_ValidSearchTerm_PassengersFound()
+            throws JsonProcessingException, Exception {
+        Passenger passenger = new Passenger();
+        Page<Passenger> foundPassengersPage = new PageImpl<Passenger>(
+                Arrays.asList(passenger));
+        String searchTerm = "a";
+        Integer pageIndex = 0;
+        Integer pageSize = 1;
+        when(passengerService.findDistinctByConfirmationCodeOrUsernameContaining(
+                searchTerm, pageIndex, pageSize))
+                        .thenReturn(foundPassengersPage);
+        Page<PassengerDto> foundPassengerDtosPage = foundPassengersPage
+                .map((Passenger p) -> modelMapper.map(p, PassengerDto.class));
+
+        mockMvc.perform(
+                get("/passengers/distinct_search?term={searchTerm}&index=0&size=1", searchTerm)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print()).andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().string(new ObjectMapper()
+                        .writeValueAsString(foundPassengerDtosPage)));
     }
 
     @Test
     public void createPassenger_ValidPassenger_PassengerCreated() {
         Passenger passenger = new Passenger();
-        when(passengerService.createPassenger(passenger)).thenReturn(passenger);
+        when(passengerService.create(passenger)).thenReturn(passenger);
         PassengerDto passengerDto = modelMapper.map(passenger,
                 PassengerDto.class);
 
@@ -89,7 +138,7 @@ public class PassengerControllerTest {
         Passenger passenger = new Passenger();
         Long id = 1L;
         passenger.setId(id);
-        when(passengerService.updatePassenger(passenger)).thenReturn(passenger);
+        when(passengerService.update(passenger)).thenReturn(passenger);
         PassengerDto passengerDto = modelMapper.map(passenger,
                 PassengerDto.class);
 
@@ -106,7 +155,7 @@ public class PassengerControllerTest {
         Long id = 1L;
         passenger.setId(id);
 
-        passengerService.deletePassengerById(id);
-        verify(passengerService, times(1)).deletePassengerById(id);
+        passengerService.deleteById(id);
+        verify(passengerService, times(1)).deleteById(id);
     }
 }

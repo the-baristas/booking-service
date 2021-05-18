@@ -124,18 +124,44 @@ public class PassengerController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<PassengerDto>> findAllPassengers(
+    public ResponseEntity<Page<PassengerDto>> findAll(
             @RequestParam("index") Integer pageIndex,
             @RequestParam("size") Integer pageSize) {
-        final Page<Passenger> passengers = passengerService
-                .findAllPassengers(pageIndex, pageSize);
+        final Page<Passenger> passengers = passengerService.findAll(pageIndex,
+                pageSize);
         final Page<PassengerDto> passengerDtos = passengers
                 .map(this::convertPassengerToDto);
         return ResponseEntity.ok(passengerDtos);
     }
 
+    @GetMapping("search")
+    public ResponseEntity<Page<PassengerDto>> findByConfirmationCodeOrUsernameContaining(
+            @RequestParam("term") String searchTerm,
+            @RequestParam("index") Integer pageIndex,
+            @RequestParam("size") Integer pageSize) {
+        Page<Passenger> passengers = passengerService
+                .findByConfirmationCodeOrUsernameContaining(searchTerm,
+                        pageIndex, pageSize);
+        Page<PassengerDto> passengerDtos = passengers
+                .map(this::convertPassengerToDto);
+        return ResponseEntity.ok(passengerDtos);
+    }
+
+    @GetMapping("distinct_search")
+    public ResponseEntity<Page<PassengerDto>> findDistinctByConfirmationCodeOrUsernameContaining(
+            @RequestParam("term") String searchTerm,
+            @RequestParam("index") Integer pageIndex,
+            @RequestParam("size") Integer pageSize) {
+        Page<Passenger> passengers = passengerService
+                .findDistinctByConfirmationCodeOrUsernameContaining(searchTerm, pageIndex,
+                        pageSize);
+        Page<PassengerDto> passengerDtos = passengers
+                .map(this::convertPassengerToDto);
+        return ResponseEntity.ok(passengerDtos);
+    }
+
     @PostMapping
-    public ResponseEntity<PassengerDto> createPassenger(
+    public ResponseEntity<PassengerDto> create(
             @RequestBody PassengerDto passengerDto,
             UriComponentsBuilder builder) {
         Passenger passenger;
@@ -144,8 +170,7 @@ public class PassengerController {
         } catch (ParseException e) {
             throw new ModelMapperFailedException(e);
         }
-        Passenger createdPassenger = passengerService
-                .createPassenger(passenger);
+        Passenger createdPassenger = passengerService.create(passenger);
         return ResponseEntity
                 .created(builder.path("/passengers/{id}")
                         .build(passengerDto.getId()))
@@ -153,7 +178,7 @@ public class PassengerController {
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<PassengerDto> updatePassenger(
+    public ResponseEntity<PassengerDto> update(
             @RequestBody PassengerDto passengerDto,
             UriComponentsBuilder builder) {
         Passenger passenger;
@@ -162,14 +187,13 @@ public class PassengerController {
         } catch (ParseException e) {
             throw new ModelMapperFailedException(e);
         }
-        Passenger updatedPassenger = passengerService
-                .updatePassenger(passenger);
+        Passenger updatedPassenger = passengerService.update(passenger);
         return ResponseEntity.ok(convertPassengerToDto(updatedPassenger));
     }
 
     @DeleteMapping("{id}")
-    public ResponseEntity<Void> deletePassengerById(@PathVariable Long id) {
-        passengerService.deletePassengerById(id);
+    public ResponseEntity<Void> deleteById(@PathVariable Long id) {
+        passengerService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
