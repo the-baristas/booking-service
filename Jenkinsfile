@@ -30,11 +30,11 @@ pipeline {
                 // sh "docker push $AWS_ID/ECR Repo/MicroServiceName:$COMMIT_HASH"
             }
         }
-        // stage('Quality gate') {
-        //     steps {
-        //         waitForQualityGate abortPipeline: true
-        //     }
-        // }
+        stage('Quality gate') {
+            steps {
+                waitForQualityGate abortPipeline: true
+            }
+        }
     }
     post {
         always {
