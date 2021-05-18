@@ -4,7 +4,7 @@ pipeline {
         COMMIT_HASH = "${sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()}"
     }
     stages {
-        stage('Clean and Test target') {
+        stage('Clean and test target') {
             steps {
                 sh 'mvn clean test'
             }
@@ -23,18 +23,18 @@ pipeline {
                 // sh "docker push $AWS_ID/ECR Repo/MicroServiceName:$COMMIT_HASH"
         //     }
         // }
-        stage('Code Analysis: Sonarqube') {
+        stage('Code Analysis: SonarQube') {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     sh 'mvn sonar:sonar -Dsonar.login=fe2fd4de999e222d92ab830601a6d0e663cc1cbe'
                 }
             }
         }
-        stage('Await Quality Gateway') {
-            steps {
-                waitForQualityGate abortPipeline: true
-            }
-        }
+        // stage('Quality gate') {
+        //     steps {
+        //         waitForQualityGate abortPipeline: true
+        //     }
+        // }
     }
     post {
         always {
