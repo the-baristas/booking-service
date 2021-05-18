@@ -23,18 +23,18 @@ pipeline {
                 // sh "docker push $AWS_ID/ECR Repo/MicroServiceName:$COMMIT_HASH"
             }
         }
-        // stage('Code Analysis: Sonarqube') {
-        //     steps {
-        //         withSonarQubeEnv('SonarQube') {
-        //             sh 'mvn sonar:sonar'
-        //         }
-        //     }
-        // }
-        // stage('Await Quality Gateway') {
-        //     steps {
-        //         waitForQualityGate abortPipeline: true
-        //     }
-        // }
+        stage('Code Analysis: Sonarqube') {
+            steps {
+                withSonarQubeEnv() {
+                    sh 'mvn sonar:sonar -Dsonar.login=fe2fd4de999e222d92ab830601a6d0e663cc1cbe'
+                }
+            }
+        }
+        stage('Await Quality Gateway') {
+            steps {
+                waitForQualityGate abortPipeline: true
+            }
+        }
     }
     post {
         always {
