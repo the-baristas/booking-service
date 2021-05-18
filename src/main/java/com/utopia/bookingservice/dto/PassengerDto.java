@@ -99,4 +99,7 @@ public class PassengerDto {
 
     @Positive
     private Integer checkInGroup;
+
+    @NotBlank
+    private String username;
 }
