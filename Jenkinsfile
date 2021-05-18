@@ -21,6 +21,11 @@ pipeline {
                 }
             }
         }
+        stage('Quality gate') {
+            steps {
+                waitForQualityGate abortPipeline: true
+            }
+        }
         stage('Docker Build') {
             steps {
                 echo 'Deploying....'
@@ -28,11 +33,6 @@ pipeline {
                 sh "docker build --tag booking-service:$COMMIT_HASH ."
                 // sh "docker tag MicroServiceName:$COMMIT_HASH $AWS_ID/ECR Repo/MicroServiceName:$COMMIT_HASH"
                 // sh "docker push $AWS_ID/ECR Repo/MicroServiceName:$COMMIT_HASH"
-            }
-        }
-        stage('Quality gate') {
-            steps {
-                waitForQualityGate abortPipeline: true
             }
         }
     }
