@@ -44,6 +44,9 @@ public class PassengerController {
                         map().setBookingTotalPrice(
                                 source.getBooking().getTotalPrice());
 
+                        map().setUsername(
+                                source.getBooking().getUser().getUsername());
+
                         map().setFlightActive(source.getFlight().getActive());
                         map().setDepartureTime(
                                 source.getFlight().getDepartureTime());
@@ -88,6 +91,9 @@ public class PassengerController {
                                 .setLayoverCount(source.getLayoverCount());
                         map().getBooking()
                                 .setTotalPrice(source.getBookingTotalPrice());
+
+                        map().getBooking().getUser()
+                                .setUsername(source.getUsername());
 
                         map().getFlight().setId(source.getFlightId());
                         map().getFlight().setActive(source.getFlightActive());
@@ -153,8 +159,8 @@ public class PassengerController {
             @RequestParam("index") Integer pageIndex,
             @RequestParam("size") Integer pageSize) {
         Page<Passenger> passengers = passengerService
-                .findDistinctByConfirmationCodeOrUsernameContaining(searchTerm, pageIndex,
-                        pageSize);
+                .findDistinctByConfirmationCodeOrUsernameContaining(searchTerm,
+                        pageIndex, pageSize);
         Page<PassengerDto> passengerDtos = passengers
                 .map(this::convertPassengerToDto);
         return ResponseEntity.ok(passengerDtos);
