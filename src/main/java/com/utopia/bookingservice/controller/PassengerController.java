@@ -2,6 +2,8 @@ package com.utopia.bookingservice.controller;
 
 import java.text.ParseException;
 
+import javax.validation.Valid;
+
 import com.utopia.bookingservice.dto.PassengerDto;
 import com.utopia.bookingservice.entity.Passenger;
 import com.utopia.bookingservice.exception.ModelMapperFailedException;
@@ -168,7 +170,7 @@ public class PassengerController {
 
     @PostMapping
     public ResponseEntity<PassengerDto> create(
-            @RequestBody PassengerDto passengerDto,
+            @Valid @RequestBody PassengerDto passengerDto,
             UriComponentsBuilder builder) {
         Passenger passenger;
         try {
@@ -185,7 +187,7 @@ public class PassengerController {
 
     @PutMapping("{id}")
     public ResponseEntity<PassengerDto> update(
-            @RequestBody PassengerDto passengerDto,
+            @Valid @RequestBody PassengerDto passengerDto,
             UriComponentsBuilder builder) {
         Passenger passenger;
         try {
