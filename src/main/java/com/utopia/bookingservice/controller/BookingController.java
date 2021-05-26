@@ -5,9 +5,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.utopia.bookingservice.dto.BookingDto;
+import com.utopia.bookingservice.dto.FlightDto;
 import com.utopia.bookingservice.entity.Booking;
+import com.utopia.bookingservice.entity.Flight;
 import com.utopia.bookingservice.exception.ModelMapperFailedException;
+import com.utopia.bookingservice.propertymap.PassengerMap;
 import com.utopia.bookingservice.service.BookingService;
+import com.utopia.bookingservice.util.DtoConverter;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
@@ -28,10 +32,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class BookingController {
     private final BookingService bookingService;
     private final ModelMapper modelMapper;
+    private final DtoConverter dtoConverter;
 
     public BookingController(BookingService bookingService,
-            ModelMapper modelMapper) {
+            ModelMapper modelMapper, DtoConverter dtoConverter) {
         this.bookingService = bookingService;
+        this.dtoConverter = dtoConverter;
         this.modelMapper = modelMapper;
         this.modelMapper.addMappings(new PropertyMap<Booking, BookingDto>() {
             @Override
@@ -39,12 +45,32 @@ public class BookingController {
                 map().setUsername(source.getUser().getUsername());
             }
         });
+        this.modelMapper.addMappings(new PropertyMap<Flight, FlightDto>() {
+            @Override
+            protected void configure() {
+                map().setRouteId(source.getRoute().getId());
+                map().setRouteActive(source.getRoute().getActive());
+                map().setOriginAirportCode(
+                        source.getRoute().getOriginAirport().getIataId());
+                map().setOriginAirportCity(
+                        source.getRoute().getOriginAirport().getCity());
+                map().setOriginAirportActive(
+                        source.getRoute().getOriginAirport().getActive());
+                map().setDestinationAirportCode(
+                        source.getRoute().getDestinationAirport().getIataId());
+                map().setDestinationAirportCity(
+                        source.getRoute().getDestinationAirport().getCity());
+                map().setDestinationAirportActive(
+                        source.getRoute().getDestinationAirport().getActive());
+            }
+        });
     }
 
     @GetMapping
     public ResponseEntity<List<BookingDto>> findAllBookings() {
         List<Booking> bookings = bookingService.findAllBookings();
-        List<BookingDto> bookingDtos = bookings.stream().map(this::convertToDto)
+        List<BookingDto> bookingDtos = bookings.stream()
+                .map(dtoConverter::convertBookingToDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(bookingDtos);
     }

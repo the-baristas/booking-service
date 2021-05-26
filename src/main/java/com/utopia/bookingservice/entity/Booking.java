@@ -46,7 +46,7 @@ public class Booking {
     private User user;
 
     @ManyToMany
-    @JoinTable(name = "booking_flight",
+    @JoinTable(name = "passenger",
             joinColumns = @JoinColumn(name = "booking_id",
                     referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "flight_id",

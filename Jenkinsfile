@@ -2,6 +2,7 @@ pipeline {
     agent any
     environment {
         COMMIT_HASH = "${sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()}"
+        AWS_ID = "135316859264"
     }
     stages {
         stage('Clean and test target') {
@@ -31,15 +32,25 @@ pipeline {
                 echo 'Deploying....'
                 // sh "aws ecr ........."
                 sh "docker build --tag booking-service:$COMMIT_HASH ."
-                // sh "docker tag MicroServiceName:$COMMIT_HASH $AWS_ID/ECR Repo/MicroServiceName:$COMMIT_HASH"
-                // sh "docker push $AWS_ID/ECR Repo/MicroServiceName:$COMMIT_HASH"
+                // sh "docker tag booking-service:$COMMIT_HASH $AWS_ID/ECR Repo/booking-service:$COMMIT_HASH"
+                // sh "docker push $AWS_ID/ECR Repo/booking-service:$COMMIT_HASH"
             }
         }
+        // stage('CloudFormation Deploy') {
+        //     steps {
+        //         echo 'Fetching CloudFormation template..'
+        //         sh "touch ECS.yml"
+        //         sh "rm ECS.yml"
+        //         sh "wget https://raw.githubusercontent.com/Java-Feb-CRAM/cloud-formation/main/ECS.yml"
+        //         echo 'Deploying CloudFormation..'
+        //         sh "aws cloudformation deploy --stack-name UtopiaFlightPlaneMS --template-file ./ECS.yml --parameter-overrides ApplicationName=FlightPlaneMS ECRepositoryUri=038778514259.dkr.ecr.us-east-1.amazonaws.com/utopia-flight-plane:$COMMIT_HASH ExecutionRoleArn=arn:aws:iam::038778514259:role/ecsTaskExecutionRole TargetGroupArn=arn:aws:elasticloadbalancing:us-east-1:038778514259:targetgroup/FlightPlaneTG/89c35ebca3b8e8fe --role-arn arn:aws:iam::038778514259:role/CloudFormationECS --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --region us-east-1"
+        //     }
+        // }
     }
     post {
         always {
             sh 'mvn clean'
-            sh 'docker image prune'
+            sh 'docker system prune -f'
         }
     }
 }

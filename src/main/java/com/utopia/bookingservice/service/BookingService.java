@@ -3,9 +3,7 @@ package com.utopia.bookingservice.service;
 import java.util.List;
 
 import com.utopia.bookingservice.entity.Booking;
-import com.utopia.bookingservice.entity.Flight;
 import com.utopia.bookingservice.repository.BookingRepository;
-import com.utopia.bookingservice.repository.FlightRepository;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,23 +15,18 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class BookingService {
     private final BookingRepository bookingRepository;
-    private final FlightRepository flightRepository;
 
     public List<Booking> findAllBookings() {
         return bookingRepository.findAll();
     }
 
     public Booking findByConfirmationCode(String confirmationCode) {
-        Booking booking = bookingRepository
+        return bookingRepository
                 .findByConfirmationCode(confirmationCode)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Could not find booking with confirmation code: "
                                 + confirmationCode));
-        List<Flight> flights = flightRepository
-                .getBookingFlights(confirmationCode);
-        booking.setFlights(flights);
-        return booking;
     }
 
     public List<Booking> findByConfirmationCodeContaining(

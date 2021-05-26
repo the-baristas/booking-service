@@ -7,6 +7,7 @@ import javax.validation.Valid;
 import com.utopia.bookingservice.dto.PassengerDto;
 import com.utopia.bookingservice.entity.Passenger;
 import com.utopia.bookingservice.exception.ModelMapperFailedException;
+import com.utopia.bookingservice.propertymap.PassengerMap;
 import com.utopia.bookingservice.service.PassengerService;
 
 import org.modelmapper.ModelMapper;
@@ -34,53 +35,7 @@ public class PassengerController {
             ModelMapper modelMapper) {
         this.passengerService = passengerService;
         this.modelMapper = modelMapper;
-        this.modelMapper
-                .addMappings(new PropertyMap<Passenger, PassengerDto>() {
-                    @Override
-                    protected void configure() {
-                        map().setBookingActive(source.getBooking().getActive());
-                        map().setBookingConfirmationCode(
-                                source.getBooking().getConfirmationCode());
-                        map().setLayoverCount(
-                                source.getBooking().getLayoverCount());
-                        map().setBookingTotalPrice(
-                                source.getBooking().getTotalPrice());
-
-                        map().setUsername(
-                                source.getBooking().getUser().getUsername());
-
-                        map().setFlightActive(source.getFlight().getActive());
-                        map().setDepartureTime(
-                                source.getFlight().getDepartureTime());
-                        map().setArrivalTime(
-                                source.getFlight().getArrivalTime());
-
-                        map().setRouteId(source.getFlight().getRoute().getId());
-                        map().setRouteActive(
-                                source.getFlight().getRoute().getActive());
-
-                        map().setOriginAirportCode(source.getFlight().getRoute()
-                                .getOriginAirport().getIataId());
-                        map().setOriginAirportActive(source.getFlight()
-                                .getRoute().getOriginAirport().getActive());
-                        map().setOriginCity(source.getFlight().getRoute()
-                                .getOriginAirport().getCity());
-
-                        map().setDestinationAirportCode(
-                                source.getFlight().getRoute()
-                                        .getDestinationAirport().getIataId());
-                        map().setDestinationAirportActive(
-                                source.getFlight().getRoute()
-                                        .getDestinationAirport().getActive());
-                        map().setDestinationCity(source.getFlight().getRoute()
-                                .getDestinationAirport().getCity());
-
-                        map().setDiscountType(
-                                source.getDiscount().getDiscountType());
-                        map().setDiscountRate(
-                                source.getDiscount().getDiscountRate());
-                    }
-                });
+        this.modelMapper.addMappings(new PassengerMap());
         this.modelMapper
                 .addMappings(new PropertyMap<PassengerDto, Passenger>() {
                     @Override
@@ -113,7 +68,7 @@ public class PassengerController {
                         map().getFlight().getRoute().getOriginAirport()
                                 .setActive(source.getOriginAirportActive());
                         map().getFlight().getRoute().getOriginAirport()
-                                .setCity(source.getOriginCity());
+                                .setCity(source.getOriginAirportCity());
 
                         map().getFlight().getRoute().getDestinationAirport()
                                 .setIataId(source.getDestinationAirportCode());
@@ -121,7 +76,7 @@ public class PassengerController {
                                 .setActive(
                                         source.getDestinationAirportActive());
                         map().getFlight().getRoute().getDestinationAirport()
-                                .setCity(source.getDestinationCity());
+                                .setCity(source.getDestinationAirportCity());
 
                         map().getDiscount()
                                 .setDiscountType(source.getDiscountType());

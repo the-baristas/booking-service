@@ -16,7 +16,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PassengerDto {
-    @Positive
     private Long id;
 
     @Positive
@@ -59,7 +58,7 @@ public class PassengerDto {
     private Boolean originAirportActive;
 
     @NotBlank
-    private String originCity;
+    private String originAirportCity;
 
     @NotBlank
     private String destinationAirportCode;
@@ -68,7 +67,7 @@ public class PassengerDto {
     private Boolean destinationAirportActive;
 
     @NotBlank
-    private String destinationCity;
+    private String destinationAirportCity;
 
     @NotBlank
     private String discountType;
