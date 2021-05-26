@@ -10,6 +10,7 @@ import com.utopia.bookingservice.exception.ModelMapperFailedException;
 import com.utopia.bookingservice.service.BookingService;
 
 import org.modelmapper.ModelMapper;
+import org.modelmapper.PropertyMap;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +33,12 @@ public class BookingController {
             ModelMapper modelMapper) {
         this.bookingService = bookingService;
         this.modelMapper = modelMapper;
+        this.modelMapper.addMappings(new PropertyMap<Booking, BookingDto>() {
+            @Override
+            protected void configure() {
+                map().setUsername(source.getUser().getUsername());
+            }
+        });
     }
 
     @GetMapping
@@ -40,6 +47,15 @@ public class BookingController {
         List<BookingDto> bookingDtos = bookings.stream().map(this::convertToDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(bookingDtos);
+    }
+
+    @GetMapping("{confirmation_code}")
+    public ResponseEntity<BookingDto> findByConfirmationCode(
+            @PathVariable("confirmation_code") String confirmationCode) {
+        final Booking booking = bookingService
+                .findByConfirmationCode(confirmationCode);
+        final BookingDto bookingDto = this.convertToDto(booking);
+        return ResponseEntity.ok(bookingDto);
     }
 
     @GetMapping("search")

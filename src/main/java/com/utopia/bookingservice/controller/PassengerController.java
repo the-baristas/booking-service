@@ -142,6 +142,13 @@ public class PassengerController {
         return ResponseEntity.ok(passengerDtos);
     }
 
+    @GetMapping("{id}")
+    public ResponseEntity<PassengerDto> findById(@PathVariable Long id) {
+        final Passenger passenger = passengerService.findById(id);
+        final PassengerDto passengerDto = this.convertPassengerToDto(passenger);
+        return ResponseEntity.ok(passengerDto);
+    }
+
     @GetMapping("search")
     public ResponseEntity<Page<PassengerDto>> findByConfirmationCodeOrUsernameContaining(
             @RequestParam("term") String searchTerm,
@@ -186,9 +193,10 @@ public class PassengerController {
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<PassengerDto> update(
+    public ResponseEntity<PassengerDto> update(@PathVariable Long id,
             @Valid @RequestBody PassengerDto passengerDto,
             UriComponentsBuilder builder) {
+        passengerDto.setId(id);
         Passenger passenger;
         try {
             passenger = convertDtoToPassenger(passengerDto);

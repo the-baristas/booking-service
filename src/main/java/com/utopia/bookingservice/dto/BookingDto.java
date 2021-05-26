@@ -1,9 +1,13 @@
 package com.utopia.bookingservice.dto;
 
+import java.util.List;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
+
+import com.utopia.bookingservice.entity.Flight;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,4 +34,7 @@ public class BookingDto {
 
     @NotBlank
     private String username;
+
+    @NotNull
+    private List<Flight> flights;
 }

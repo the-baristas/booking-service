@@ -22,6 +22,12 @@ public class PassengerService {
         return passengerRepository.findAll(pageable);
     }
 
+    public Passenger findById(Long id) {
+        return passengerRepository.findById(id).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Could not find passenger with id=" + id));
+    }
+
     public Passenger create(Passenger passeneger) {
         try {
             return passengerRepository.save(passeneger);
