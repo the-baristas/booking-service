@@ -1,6 +1,6 @@
 package com.utopia.bookingservice.dto;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.validation.constraints.NotBlank;
@@ -22,10 +22,10 @@ public class FlightDto {
     private Boolean active;
 
     @NotNull
-    private ZonedDateTime departureTime;
+    private LocalDateTime departureTime;
 
     @NotNull
-    private ZonedDateTime arrivalTime;
+    private LocalDateTime arrivalTime;
 
     @Positive
     private Long routeId;
@@ -51,7 +51,8 @@ public class FlightDto {
     @NotNull
     private Boolean destinationAirportActive;
 
-    private List<PassengerDto> passengers;
+    @NotBlank
+    private String airplaneModel;
 
-    private List<BookingDto> bookings;
+    private List<PassengerDto> passengers;
 }

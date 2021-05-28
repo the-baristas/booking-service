@@ -15,6 +15,8 @@ public class PassengerMap extends PropertyMap<Passenger, PassengerDto> {
         map().setBookingTotalPrice(source.getBooking().getTotalPrice());
 
         map().setUsername(source.getBooking().getUser().getUsername());
+        map().setEmail(source.getBooking().getUser().getEmail());
+        map().setPhone(source.getBooking().getUser().getPhone());
 
         map().setFlightActive(source.getFlight().getActive());
         map().setDepartureTime(source.getFlight().getDepartureTime());
@@ -23,15 +25,15 @@ public class PassengerMap extends PropertyMap<Passenger, PassengerDto> {
         map().setRouteId(source.getFlight().getRoute().getId());
         map().setRouteActive(source.getFlight().getRoute().getActive());
 
-        map().setOriginAirportCode(
-                source.getFlight().getRoute().getOriginAirport().getIataId());
+        map().setOriginAirportCode(source.getFlight().getRoute()
+                .getOriginAirport().getAirportCode());
         map().setOriginAirportActive(
                 source.getFlight().getRoute().getOriginAirport().getActive());
         map().setOriginAirportCity(
                 source.getFlight().getRoute().getOriginAirport().getCity());
 
         map().setDestinationAirportCode(source.getFlight().getRoute()
-                .getDestinationAirport().getIataId());
+                .getDestinationAirport().getAirportCode());
         map().setDestinationAirportActive(source.getFlight().getRoute()
                 .getDestinationAirport().getActive());
         map().setDestinationAirportCity(source.getFlight().getRoute()

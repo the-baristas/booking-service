@@ -1,6 +1,6 @@
 package com.utopia.bookingservice.entity;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -9,7 +9,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -34,18 +33,19 @@ public class Flight {
     @JoinColumn(name = "route_id")
     private Route route;
 
+    @ManyToOne
+    @JoinColumn(name = "airplane_id")
+    private Airplane airplane;
+
     @Column(name = "departure_time")
-    private ZonedDateTime departureTime;
+    private LocalDateTime departureTime;
 
     @Column(name = "arrival_time")
-    private ZonedDateTime arrivalTime;
+    private LocalDateTime arrivalTime;
 
     @Column(name = "is_active")
     private Boolean active;
 
     @OneToMany(mappedBy = "flight")
     private List<Passenger> passengers;
-
-    @ManyToMany(mappedBy = "flights")
-    private List<Booking> bookings;
 }

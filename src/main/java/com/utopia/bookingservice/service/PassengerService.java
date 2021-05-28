@@ -28,12 +28,12 @@ public class PassengerService {
                         "Could not find passenger with id=" + id));
     }
 
-    public Passenger create(Passenger passeneger) {
+    public Passenger create(Passenger passenger) {
         try {
-            return passengerRepository.save(passeneger);
+            return passengerRepository.save(passenger);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Could not create passenger with id=" + passeneger.getId(),
+                    "Could not create passenger with id=" + passenger.getId(),
                     e);
         }
     }

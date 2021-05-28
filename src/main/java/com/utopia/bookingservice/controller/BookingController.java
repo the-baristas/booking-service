@@ -9,7 +9,6 @@ import com.utopia.bookingservice.dto.FlightDto;
 import com.utopia.bookingservice.entity.Booking;
 import com.utopia.bookingservice.entity.Flight;
 import com.utopia.bookingservice.exception.ModelMapperFailedException;
-import com.utopia.bookingservice.propertymap.PassengerMap;
 import com.utopia.bookingservice.service.BookingService;
 import com.utopia.bookingservice.util.DtoConverter;
 
@@ -43,6 +42,8 @@ public class BookingController {
             @Override
             protected void configure() {
                 map().setUsername(source.getUser().getUsername());
+                map().setEmail(source.getUser().getEmail());
+                map().setPhone(source.getUser().getPhone());
             }
         });
         this.modelMapper.addMappings(new PropertyMap<Flight, FlightDto>() {
@@ -50,18 +51,21 @@ public class BookingController {
             protected void configure() {
                 map().setRouteId(source.getRoute().getId());
                 map().setRouteActive(source.getRoute().getActive());
+
                 map().setOriginAirportCode(
-                        source.getRoute().getOriginAirport().getIataId());
+                        source.getRoute().getOriginAirport().getAirportCode());
                 map().setOriginAirportCity(
                         source.getRoute().getOriginAirport().getCity());
                 map().setOriginAirportActive(
                         source.getRoute().getOriginAirport().getActive());
-                map().setDestinationAirportCode(
-                        source.getRoute().getDestinationAirport().getIataId());
+                map().setDestinationAirportCode(source.getRoute()
+                        .getDestinationAirport().getAirportCode());
                 map().setDestinationAirportCity(
                         source.getRoute().getDestinationAirport().getCity());
                 map().setDestinationAirportActive(
                         source.getRoute().getDestinationAirport().getActive());
+
+                map().setAirplaneModel(source.getAirplane().getModel());
             }
         });
     }

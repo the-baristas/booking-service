@@ -53,7 +53,7 @@ public class PassengerServiceTest {
         Route route = new Route();
         route.setId(1L);
         Airport originAirport = new Airport();
-        originAirport.setIataId("JFK");
+        originAirport.setAirportCode("JFK");
         originAirport.setCity("New York");
         originAirport.setActive(Boolean.TRUE);
         route.setOriginAirport(originAirport);

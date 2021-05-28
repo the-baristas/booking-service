@@ -1,6 +1,7 @@
 package com.utopia.bookingservice.repository;
 
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 import com.utopia.bookingservice.entity.Flight;
 
@@ -15,7 +16,21 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
     // JOIN booking on booking_id = booking.id JOIN flight ON flight_id =
     // flight.id where booking.confirmation_code = 'C1';",
     // nativeQuery = true)
-    @Query("SELECT f FROM Booking b JOIN b.flights f WHERE b.confirmationCode = :confirmationCode")
-    List<Flight> getBookingFlights(
-            @Param("confirmationCode") String confirmationCode);
+
+    // @Query("SELECT f FROM Booking b JOIN b.flights f WHERE b.confirmationCode
+    // = :confirmationCode")
+    // List<Flight> getBookingFlights(
+    // @Param("confirmationCode") String confirmationCode);
+
+    @Query("select f from Flight f where f.route.originAirport.airportCode = "
+            + ":originAirportCode and f.route.destinationAirport.airportCode = "
+            + ":destinationAirportCode and f.airplane.model = :airplaneModel "
+            + "and f.departureTime = :departureTime and f.arrivalTime = "
+            + ":arrivalTime")
+    Optional<Flight> identifyFlight(
+            @Param("originAirportCode") String originAirportCode,
+            @Param("destinationAirportCode") String destinationAirportCode,
+            @Param("airplaneModel") String airplaneModel,
+            @Param("departureTime") LocalDateTime departureTime,
+            @Param("arrivalTime") LocalDateTime arrivalTime);
 }

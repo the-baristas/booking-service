@@ -1,6 +1,7 @@
 package com.utopia.bookingservice.entity;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -11,6 +12,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -51,5 +53,8 @@ public class Booking {
                     referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "flight_id",
                     referencedColumnName = "id"))
-    private List<Flight> flights;
+    private Set<Flight> flights;
+
+    @OneToMany(mappedBy = "booking")
+    private List<Passenger> passengers;
 }

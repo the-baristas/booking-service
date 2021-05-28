@@ -31,7 +31,8 @@ public class Passenger {
     private Flight flight;
 
     @ManyToOne
-    @JoinColumn(name = "discount_type")
+    @JoinColumn(name = "discount_type",
+            columnDefinition = "varchar(45) default 'none'")
     private Discount discount;
 
     @Column(name = "given_name")

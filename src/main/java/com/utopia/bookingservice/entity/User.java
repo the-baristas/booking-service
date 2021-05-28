@@ -24,6 +24,12 @@ public class User {
     @Column(name = "username")
     private String username;
 
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "phone")
+    private String phone;
+
     @OneToMany(mappedBy = "user")
     private List<Booking> bookings;
 }

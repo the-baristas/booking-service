@@ -1,8 +1,9 @@
 package com.utopia.bookingservice.dto;
 
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
@@ -40,10 +41,10 @@ public class PassengerDto {
     private Boolean flightActive;
 
     @NotNull
-    private ZonedDateTime departureTime;
+    private LocalDateTime departureTime;
 
     @NotNull
-    private ZonedDateTime arrivalTime;
+    private LocalDateTime arrivalTime;
 
     @Positive
     private Long routeId;
@@ -101,4 +102,10 @@ public class PassengerDto {
 
     @NotBlank
     private String username;
+
+    @Email
+    private String email;
+
+    @NotBlank
+    private String phone;
 }
