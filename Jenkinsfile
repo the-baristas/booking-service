@@ -14,13 +14,13 @@ pipeline {
                 sh 'mvn package'
             }
         }
-        stage('Code Analysis: SonarQube') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh 'mvn sonar:sonar'
-                }
-            }
-        }
+        // stage('Code Analysis: SonarQube') {
+        //     steps {
+        //         withSonarQubeEnv('SonarQube') {
+        //             sh 'mvn sonar:sonar'
+        //         }
+        //     }
+        // }
         // stage('Quality gate') {
         //     steps {
         //         waitForQualityGate abortPipeline: true
