@@ -31,9 +31,7 @@ pipeline {
                 echo 'Deploying....'
                 aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 135316859264.dkr.ecr.us-east-2.amazonaws.com
                 sh "docker build -t booking-service:$COMMIT_HASH ."
-                // sh "docker tag booking-service:$COMMIT_HASH $AWS_ID/ECR Repo/booking-service:$COMMIT_HASH"
-                // sh "docker push $AWS_ID/ECR Repo/booking-service:$COMMIT_HASH"
-                sh "docker tag booking-service:$COMMIT_HASH $AWS_ID.dkr.ecr.us-east-2.amazonaws.com/booking-service:$COMMIT_HASH"
+                sh "docker tag booking-service:$COMMIT_HASH 135316859264.dkr.ecr.us-east-2.amazonaws.com/booking-service:$COMMIT_HASH"
                 sh "docker push 135316859264.dkr.ecr.us-east-2.amazonaws.com/booking-service:$COMMIT_HASH"
             }
         }
