@@ -35,16 +35,14 @@ pipeline {
                 sh "docker push 135316859264.dkr.ecr.us-east-2.amazonaws.com/booking-service:$COMMIT_HASH"
             }
         }
-        // stage('CloudFormation Deploy') {
-        //     steps {
-        //         echo 'Fetching CloudFormation template..'
-        //         sh "touch ECS.yml"
-        //         sh "rm ECS.yml"
-        //         sh "wget https://raw.githubusercontent.com/Java-Feb-CRAM/cloud-formation/main/ECS.yml"
-        //         echo 'Deploying CloudFormation..'
-        //         sh "aws cloudformation deploy --stack-name UtopiaFlightPlaneMS --template-file ./ECS.yml --parameter-overrides ApplicationName=FlightPlaneMS ECRepositoryUri=038778514259.dkr.ecr.us-east-1.amazonaws.com/utopia-flight-plane:$COMMIT_HASH ExecutionRoleArn=arn:aws:iam::038778514259:role/ecsTaskExecutionRole TargetGroupArn=arn:aws:elasticloadbalancing:us-east-1:038778514259:targetgroup/FlightPlaneTG/89c35ebca3b8e8fe --role-arn arn:aws:iam::038778514259:role/CloudFormationECS --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --region us-east-1"
-        //     }
-        // }
+        stage('CloudFormation Deploy') {
+            steps {
+                echo 'Fetching CloudFormation template..'
+                sh "aws s3 cp s3://cloudformation-us-east-2-135316859264/booking-service/cloudformation.template ./"
+                echo 'Deploying CloudFormation..'
+                sh "aws cloudformation deploy --stack-name booking-service --template-file ./cloudformation.template --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --region us-east-2"
+            }
+        }
     }
     post {
         always {
