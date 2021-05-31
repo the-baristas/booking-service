@@ -54,5 +54,6 @@ public class FlightDto {
     @NotBlank
     private String airplaneModel;
 
+    @NotNull
     private List<PassengerDto> passengers;
 }

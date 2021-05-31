@@ -63,7 +63,7 @@ public class BookingServiceTest {
         Booking savedBooking = modelMapper.map(savedBookingDto, Booking.class);
         when(bookingRepository.save(booking)).thenReturn(savedBooking);
 
-        Booking newBooking = bookingService.createBooking(booking);
+        Booking newBooking = bookingService.create(booking);
         assertThat(newBooking, is(savedBooking));
     }
 }

@@ -35,7 +35,7 @@ public class Booking {
     private String confirmationCode;
 
     @Column(name = "is_active")
-    private Boolean active;
+    private Boolean active = true;
 
     @Column(name = "layover_count")
     private Integer layoverCount;

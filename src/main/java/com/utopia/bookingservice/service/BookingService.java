@@ -35,7 +35,7 @@ public class BookingService {
                 .findByConfirmationCodeContaining(confirmationCode);
     }
 
-    public Booking createBooking(Booking booking) {
+    public Booking create(Booking booking) {
         try {
             return bookingRepository.save(booking);
         } catch (IllegalArgumentException e) {

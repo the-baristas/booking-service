@@ -1,15 +1,26 @@
 package com.utopia.bookingservice.controller;
 
 import java.text.ParseException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.validation.Valid;
+
 import com.utopia.bookingservice.dto.BookingDto;
+import com.utopia.bookingservice.dto.CreatingBookingDto;
 import com.utopia.bookingservice.dto.FlightDto;
 import com.utopia.bookingservice.entity.Booking;
+import com.utopia.bookingservice.entity.Discount;
 import com.utopia.bookingservice.entity.Flight;
+import com.utopia.bookingservice.entity.Passenger;
+import com.utopia.bookingservice.entity.User;
 import com.utopia.bookingservice.exception.ModelMapperFailedException;
+import com.utopia.bookingservice.propertymap.CreatingBookingDtoMap;
 import com.utopia.bookingservice.service.BookingService;
+import com.utopia.bookingservice.service.FlightService;
+import com.utopia.bookingservice.service.PassengerService;
+import com.utopia.bookingservice.service.UserService;
 import com.utopia.bookingservice.util.DtoConverter;
 
 import org.modelmapper.ModelMapper;
@@ -30,12 +41,19 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RequestMapping("/bookings")
 public class BookingController {
     private final BookingService bookingService;
+    private final FlightService flightService;
+    private final PassengerService passengerService;
+    private final UserService userService;
     private final ModelMapper modelMapper;
     private final DtoConverter dtoConverter;
 
     public BookingController(BookingService bookingService,
+            FlightService flightService, PassengerService passengerService, UserService userService,
             ModelMapper modelMapper, DtoConverter dtoConverter) {
         this.bookingService = bookingService;
+        this.flightService = flightService;
+        this.passengerService = passengerService;
+        this.userService = userService;
         this.dtoConverter = dtoConverter;
         this.modelMapper = modelMapper;
         this.modelMapper.addMappings(new PropertyMap<Booking, BookingDto>() {
@@ -46,6 +64,7 @@ public class BookingController {
                 map().setPhone(source.getUser().getPhone());
             }
         });
+        this.modelMapper.addMappings(new CreatingBookingDtoMap());
         this.modelMapper.addMappings(new PropertyMap<Flight, FlightDto>() {
             @Override
             protected void configure() {
@@ -100,18 +119,43 @@ public class BookingController {
 
     @PostMapping
     public ResponseEntity<BookingDto> createBooking(
-            @RequestBody BookingDto bookingDto, UriComponentsBuilder builder) {
-        Booking booking;
-        try {
-            booking = convertToEntity(bookingDto);
-        } catch (ParseException e) {
-            throw new ModelMapperFailedException(e);
-        }
-        Booking createdBooking = bookingService.createBooking(booking);
+            @Valid @RequestBody CreatingBookingDto creatingBookingDto,
+            UriComponentsBuilder builder) {
+        Booking creatingBooking = modelMapper.map(creatingBookingDto,
+                Booking.class);
+
+        Passenger creatingPassenger = new Passenger();
+        String originAirportCode = creatingBookingDto.getOriginAirportCode();
+        String destinationAirportCode = creatingBookingDto
+                .getDestinationAirportCode();
+        String airplaneModel = creatingBookingDto.getAirplaneModel();
+        LocalDateTime departureTime = creatingBookingDto.getDepartureTime();
+        LocalDateTime arrivalTime = creatingBookingDto.getArrivalTime();
+        Flight flight = flightService.identifyFlight(originAirportCode,
+                destinationAirportCode, airplaneModel, departureTime,
+                arrivalTime);
+        creatingPassenger.setFlight(flight);
+        Discount discount = new Discount();
+        discount.setDiscountType(creatingBookingDto.getDiscountType());
+        creatingPassenger.setDiscount(discount);
+        creatingPassenger.setGivenName(creatingBookingDto.getGivenName());
+        creatingPassenger.setFamilyName(creatingBookingDto.getFamilyName());
+        creatingPassenger.setDateOfBirth(creatingBookingDto.getDateOfBirth());
+        creatingPassenger.setGender(creatingBookingDto.getGender());
+        creatingPassenger.setAddress(creatingBookingDto.getAddress());
+        creatingPassenger.setSeatClass(creatingBookingDto.getSeatClass());
+        creatingPassenger.setSeatNumber(creatingBookingDto.getSeatNumber());
+        creatingPassenger.setCheckInGroup(creatingBookingDto.getCheckInGroup());
+
+        User user = userService.findByUsername(creatingBookingDto.getUsername());
+        creatingBooking.setUser(user);
+        Booking newBooking = bookingService.create(creatingBooking);
+        creatingPassenger.setBooking(newBooking);
+        passengerService.create(creatingPassenger);
         return ResponseEntity
                 .created(builder.path("/bookings/{id}")
-                        .build(bookingDto.getId()))
-                .body(convertToDto(createdBooking));
+                        .build(newBooking.getId()))
+                .body(convertToDto(newBooking));
     }
 
     @PutMapping("{id}")

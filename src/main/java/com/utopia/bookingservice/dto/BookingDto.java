@@ -5,6 +5,7 @@ import java.util.List;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -20,6 +21,7 @@ import lombok.NoArgsConstructor;
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class,
         property = "id")
 public class BookingDto {
+    @Positive
     private Long id;
 
     @NotNull
@@ -43,7 +45,9 @@ public class BookingDto {
     @NotBlank
     private String phone;
 
-    private List<PassengerDto> passengers;
-
+    @NotNull
     private List<FlightDto> flights;
+
+    @NotNull
+    private List<PassengerDto> passengers;
 }
