@@ -2,8 +2,10 @@ pipeline {
     agent any
     environment {
         COMMIT_HASH = "${sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()}"
+        TAG = ${COMMIT_HASH}
         ECR_REGISTRY_URI = "135316859264.dkr.ecr.us-east-2.amazonaws.com"
         S3_URI = "s3://cloudformation-us-east-2-135316859264/booking-service-stack/cloudformation.template"
+        SERVICE_NAME = "booking-service"
     }
     stages {
         stage('Clean and test target') {
@@ -32,9 +34,9 @@ pipeline {
             steps {
                 echo 'Deploying....'
                 sh "aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin ${ECR_REGISTRY_URI}"
-                sh "docker build -t booking-service:latest ."
-                sh "docker tag booking-service:latest ${ECR_REGISTRY_URI}/booking-service:latest"
-                sh "docker push ${ECR_REGISTRY_URI}/booking-service:latest"
+                sh "docker build -t ${SERVICE_NAME}:${TAG} ."
+                sh "docker tag ${SERVICE_NAME}:${TAG} ${ECR_REGISTRY_URI}/${SERVICE_NAME}:${TAG}"
+                sh "docker push ${ECR_REGISTRY_URI}/${SERVICE_NAME}:${TAG}"
             }
         }
         stage('CloudFormation Deploy') {
@@ -42,7 +44,7 @@ pipeline {
                 echo 'Fetching CloudFormation template..'
                 sh "aws s3 cp ${S3_URI} ./"
                 echo 'Deploying CloudFormation..'
-                sh "aws cloudformation deploy --stack-name booking-service-stack --template-file ./cloudformation.template --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --region us-east-2"
+                sh "aws cloudformation deploy --stack-name ${SERVICE_NAME}-stack --template-file ./cloudformation.template  --parameter-overrides ApplicationName=${SERVICE_NAME} ECRepositoryUri=${ECR_REGISTRY_URI}/${SERVICE_NAME}:${TAG} --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --region us-east-2"
             }
         }
     }
