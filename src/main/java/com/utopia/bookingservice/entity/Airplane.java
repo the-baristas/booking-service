@@ -9,18 +9,15 @@ import javax.persistence.Table;
 
 import lombok.Data;
 
-@Entity
-@Table(name = "airport")
 @Data
-public class Airport {
+@Entity
+@Table(name = "airplane")
+public class Airplane {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "iata_id")
-    private String airportCode;
+    @Column(name = "id")
+    private Long id;
 
-    @Column(name = "city")
-    private String city;
-
-    @Column(name = "is_active")
-    private Boolean active;
+    @Column(name = "model")
+    private String model;
 }

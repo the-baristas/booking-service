@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+                                         "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+ <session-factory name="">
+  <property name="hibernate.connection.password">adminadmin</property>
+  <property name="hibernate.connection.url">jdbc:mysql://utopia.cmscou927iwv.us-east-2.rds.amazonaws.com/utopia_airlines</property>
+  <property name="hibernate.connection.username">admin</property>
+  <property name="hibernate.default_schema">utopia_airlines</property>
+  <property name="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
+  <property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+ </session-factory>
+</hibernate-configuration>

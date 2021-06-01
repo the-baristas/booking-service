@@ -1,16 +1,22 @@
 package com.utopia.bookingservice.controller;
 
-import java.text.ParseException;
+import java.time.LocalDateTime;
 
 import javax.validation.Valid;
 
+import com.utopia.bookingservice.dto.CreatingPassengerDto;
 import com.utopia.bookingservice.dto.PassengerDto;
+import com.utopia.bookingservice.entity.Booking;
+import com.utopia.bookingservice.entity.Flight;
 import com.utopia.bookingservice.entity.Passenger;
-import com.utopia.bookingservice.exception.ModelMapperFailedException;
+import com.utopia.bookingservice.propertymap.CreatingPassengerDtoMap;
+import com.utopia.bookingservice.propertymap.PassengerDtoMap;
+import com.utopia.bookingservice.propertymap.PassengerMap;
+import com.utopia.bookingservice.service.BookingService;
+import com.utopia.bookingservice.service.FlightService;
 import com.utopia.bookingservice.service.PassengerService;
 
 import org.modelmapper.ModelMapper;
-import org.modelmapper.PropertyMap;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,107 +34,20 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RequestMapping("passengers")
 public class PassengerController {
     private final PassengerService passengerService;
+    private final BookingService bookingService;
+    private final FlightService flightService;
     private final ModelMapper modelMapper;
 
     public PassengerController(PassengerService passengerService,
+            BookingService bookingService, FlightService flightService,
             ModelMapper modelMapper) {
         this.passengerService = passengerService;
+        this.bookingService = bookingService;
+        this.flightService = flightService;
         this.modelMapper = modelMapper;
-        this.modelMapper
-                .addMappings(new PropertyMap<Passenger, PassengerDto>() {
-                    @Override
-                    protected void configure() {
-                        map().setBookingActive(source.getBooking().getActive());
-                        map().setBookingConfirmationCode(
-                                source.getBooking().getConfirmationCode());
-                        map().setLayoverCount(
-                                source.getBooking().getLayoverCount());
-                        map().setBookingTotalPrice(
-                                source.getBooking().getTotalPrice());
-
-                        map().setUsername(
-                                source.getBooking().getUser().getUsername());
-
-                        map().setFlightActive(source.getFlight().getActive());
-                        map().setDepartureTime(
-                                source.getFlight().getDepartureTime());
-                        map().setArrivalTime(
-                                source.getFlight().getArrivalTime());
-
-                        map().setRouteId(source.getFlight().getRoute().getId());
-                        map().setRouteActive(
-                                source.getFlight().getRoute().getActive());
-
-                        map().setOriginAirportCode(source.getFlight().getRoute()
-                                .getOriginAirport().getIataId());
-                        map().setOriginAirportActive(source.getFlight()
-                                .getRoute().getOriginAirport().getActive());
-                        map().setOriginCity(source.getFlight().getRoute()
-                                .getOriginAirport().getCity());
-
-                        map().setDestinationAirportCode(
-                                source.getFlight().getRoute()
-                                        .getDestinationAirport().getIataId());
-                        map().setDestinationAirportActive(
-                                source.getFlight().getRoute()
-                                        .getDestinationAirport().getActive());
-                        map().setDestinationCity(source.getFlight().getRoute()
-                                .getDestinationAirport().getCity());
-
-                        map().setDiscountType(
-                                source.getDiscount().getDiscountType());
-                        map().setDiscountRate(
-                                source.getDiscount().getDiscountRate());
-                    }
-                });
-        this.modelMapper
-                .addMappings(new PropertyMap<PassengerDto, Passenger>() {
-                    @Override
-                    protected void configure() {
-                        map().getBooking().setId(source.getBookingId());
-                        map().getBooking().setActive(source.getBookingActive());
-                        map().getBooking().setConfirmationCode(
-                                source.getBookingConfirmationCode());
-                        map().getBooking()
-                                .setLayoverCount(source.getLayoverCount());
-                        map().getBooking()
-                                .setTotalPrice(source.getBookingTotalPrice());
-
-                        map().getBooking().getUser()
-                                .setUsername(source.getUsername());
-
-                        map().getFlight().setId(source.getFlightId());
-                        map().getFlight().setActive(source.getFlightActive());
-                        map().getFlight()
-                                .setDepartureTime(source.getDepartureTime());
-                        map().getFlight()
-                                .setArrivalTime(source.getArrivalTime());
-
-                        map().getFlight().getRoute().setId(source.getRouteId());
-                        map().getFlight().getRoute()
-                                .setActive(source.getRouteActive());
-
-                        map().getFlight().getRoute().getOriginAirport()
-                                .setIataId(source.getOriginAirportCode());
-                        map().getFlight().getRoute().getOriginAirport()
-                                .setActive(source.getOriginAirportActive());
-                        map().getFlight().getRoute().getOriginAirport()
-                                .setCity(source.getOriginCity());
-
-                        map().getFlight().getRoute().getDestinationAirport()
-                                .setIataId(source.getDestinationAirportCode());
-                        map().getFlight().getRoute().getDestinationAirport()
-                                .setActive(
-                                        source.getDestinationAirportActive());
-                        map().getFlight().getRoute().getDestinationAirport()
-                                .setCity(source.getDestinationCity());
-
-                        map().getDiscount()
-                                .setDiscountType(source.getDiscountType());
-                        map().getDiscount()
-                                .setDiscountRate(source.getDiscountRate());
-                    }
-                });
+        this.modelMapper.addMappings(new PassengerMap());
+        this.modelMapper.addMappings(new PassengerDtoMap());
+        this.modelMapper.addMappings(new CreatingPassengerDtoMap());
     }
 
     @GetMapping
@@ -140,6 +59,13 @@ public class PassengerController {
         final Page<PassengerDto> passengerDtos = passengers
                 .map(this::convertPassengerToDto);
         return ResponseEntity.ok(passengerDtos);
+    }
+
+    @GetMapping("{id}")
+    public ResponseEntity<PassengerDto> findById(@PathVariable Long id) {
+        final Passenger passenger = passengerService.findById(id);
+        final PassengerDto passengerDto = this.convertPassengerToDto(passenger);
+        return ResponseEntity.ok(passengerDto);
     }
 
     @GetMapping("search")
@@ -170,31 +96,45 @@ public class PassengerController {
 
     @PostMapping
     public ResponseEntity<PassengerDto> create(
-            @Valid @RequestBody PassengerDto passengerDto,
+            @Valid @RequestBody CreatingPassengerDto creatingPassengerDto,
             UriComponentsBuilder builder) {
-        Passenger passenger;
-        try {
-            passenger = convertDtoToPassenger(passengerDto);
-        } catch (ParseException e) {
-            throw new ModelMapperFailedException(e);
-        }
-        Passenger createdPassenger = passengerService.create(passenger);
+        Passenger creatingPassenger = modelMapper.map(creatingPassengerDto,
+                Passenger.class);
+
+        Booking booking = bookingService.findByConfirmationCode(
+                creatingPassenger.getBooking().getConfirmationCode());
+        creatingPassenger.setBooking(booking);
+        String originAirportCode = creatingPassenger.getFlight().getRoute()
+                .getOriginAirport().getAirportCode();
+        String destinationAirportCode = creatingPassenger.getFlight().getRoute()
+                .getDestinationAirport().getAirportCode();
+        String airplaneModel = creatingPassenger.getFlight().getAirplane()
+                .getModel();
+        LocalDateTime departureTime = creatingPassenger.getFlight()
+                .getDepartureTime();
+        LocalDateTime arrivalTime = creatingPassenger.getFlight()
+                .getArrivalTime();
+        Flight flight = flightService.identifyFlight(originAirportCode,
+                destinationAirportCode, airplaneModel, departureTime,
+                arrivalTime);
+        creatingPassenger.setFlight(flight);
+
+        Passenger createdPassenger = passengerService.create(creatingPassenger);
+        PassengerDto createdPassengerDto = modelMapper.map(createdPassenger,
+                PassengerDto.class);
         return ResponseEntity
                 .created(builder.path("/passengers/{id}")
-                        .build(passengerDto.getId()))
-                .body(convertPassengerToDto(createdPassenger));
+                        .build(createdPassengerDto.getId()))
+                .body(createdPassengerDto);
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<PassengerDto> update(
+    public ResponseEntity<PassengerDto> update(@PathVariable Long id,
             @Valid @RequestBody PassengerDto passengerDto,
             UriComponentsBuilder builder) {
+        passengerDto.setId(id);
         Passenger passenger;
-        try {
-            passenger = convertDtoToPassenger(passengerDto);
-        } catch (ParseException e) {
-            throw new ModelMapperFailedException(e);
-        }
+        passenger = convertDtoToPassenger(passengerDto);
         Passenger updatedPassenger = passengerService.update(passenger);
         return ResponseEntity.ok(convertPassengerToDto(updatedPassenger));
     }
@@ -209,8 +149,7 @@ public class PassengerController {
         return modelMapper.map(passenger, PassengerDto.class);
     }
 
-    private Passenger convertDtoToPassenger(PassengerDto passengerDto)
-            throws ParseException {
+    private Passenger convertDtoToPassenger(PassengerDto passengerDto) {
         return modelMapper.map(passengerDto, Passenger.class);
     }
 }
