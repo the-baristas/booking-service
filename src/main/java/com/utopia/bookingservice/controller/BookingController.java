@@ -40,6 +40,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RestController
 @RequestMapping("/bookings")
 public class BookingController {
+    private static final Integer childDiscountAge = 2;
+    private static final Integer edlerDiscountAge = 2;
+
     private final BookingService bookingService;
     private final FlightService flightService;
     private final PassengerService passengerService;
