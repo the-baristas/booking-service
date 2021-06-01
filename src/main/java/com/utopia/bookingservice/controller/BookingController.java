@@ -34,11 +34,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
-@RequestMapping("/bookings")
 public class BookingController {
     private static final Integer childDiscountAge = 2;
     private static final Integer edlerDiscountAge = 2;
@@ -92,7 +92,12 @@ public class BookingController {
         });
     }
 
-    @GetMapping
+    @GetMapping("/")
+    public @ResponseBody ResponseEntity<String> checkHealth() {
+        return ResponseEntity.ok("Health is OK.");
+    }
+
+    @GetMapping("bookings")
     public ResponseEntity<List<BookingDto>> findAllBookings() {
         List<Booking> bookings = bookingService.findAllBookings();
         List<BookingDto> bookingDtos = bookings.stream()
@@ -101,7 +106,7 @@ public class BookingController {
         return ResponseEntity.ok(bookingDtos);
     }
 
-    @GetMapping("{confirmation_code}")
+    @GetMapping("bookings/{confirmation_code}")
     public ResponseEntity<BookingDto> findByConfirmationCode(
             @PathVariable("confirmation_code") String confirmationCode) {
         final Booking booking = bookingService
@@ -110,7 +115,7 @@ public class BookingController {
         return ResponseEntity.ok(bookingDto);
     }
 
-    @GetMapping("search")
+    @GetMapping("bookings/search")
     public ResponseEntity<List<BookingDto>> findBookingsByModelContaining(
             @RequestParam("confirmation_code") String confirmationCode) {
         List<Booking> bookings = bookingService
@@ -120,7 +125,7 @@ public class BookingController {
         return ResponseEntity.ok(bookingDtos);
     }
 
-    @PostMapping
+    @PostMapping("bookings")
     public ResponseEntity<BookingDto> createBooking(
             @Valid @RequestBody CreatingBookingDto creatingBookingDto,
             UriComponentsBuilder builder) {
@@ -161,7 +166,7 @@ public class BookingController {
                 .body(convertToDto(newBooking));
     }
 
-    @PutMapping("{id}")
+    @PutMapping("bookings/{id}")
     public ResponseEntity<BookingDto> updateBooking(@PathVariable Long id,
             @RequestBody BookingDto bookingDto)
             throws ModelMapperFailedException {
@@ -175,7 +180,7 @@ public class BookingController {
         return ResponseEntity.ok(convertToDto(updateBooking));
     }
 
-    @DeleteMapping("{id}")
+    @DeleteMapping("bookings/{id}")
     public ResponseEntity<String> deleteBooking(@PathVariable Long id)
             throws ModelMapperFailedException {
         bookingService.deleteBookingById(id);
