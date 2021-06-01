@@ -43,7 +43,7 @@ pipeline {
                 echo 'Fetching CloudFormation template..'
                 sh "aws s3 cp ${S3_URI} ./"
                 echo 'Deploying CloudFormation..'
-                sh "aws cloudformation deploy --stack-name ${SERVICE_NAME}-stack --template-file ./cloudformation.template  --parameter-overrides ApplicationName=${SERVICE_NAME} ECRepositoryUri=${ECR_REGISTRY_URI}/${SERVICE_NAME}:${COMMIT_HASH} --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --region us-east-2"
+                sh "aws cloudformation deploy --stack-name ${SERVICE_NAME}-stack --template-file ./cloudformation.template  --parameter-overrides ApplicationName=${SERVICE_NAME} EcrImageUri=${ECR_REGISTRY_URI}/${SERVICE_NAME}:${COMMIT_HASH} --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --region us-east-2"
             }
         }
     }
