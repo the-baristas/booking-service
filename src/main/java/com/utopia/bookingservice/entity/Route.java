@@ -11,14 +11,17 @@ import javax.persistence.Table;
 
 import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "route")
-@Data
 public class Route {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
+
+    @Column(name = "is_active")
+    private Boolean active;
 
     @ManyToOne
     @JoinColumn(name = "origin_id")
@@ -27,7 +30,4 @@ public class Route {
     @ManyToOne
     @JoinColumn(name = "destination_id")
     private Airport destinationAirport;
-
-    @Column(name = "is_active")
-    private Boolean active;
 }

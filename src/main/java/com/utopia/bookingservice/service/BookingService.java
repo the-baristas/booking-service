@@ -20,13 +20,22 @@ public class BookingService {
         return bookingRepository.findAll();
     }
 
+    public Booking findByConfirmationCode(String confirmationCode) {
+        return bookingRepository
+                .findByConfirmationCode(confirmationCode)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Could not find booking with confirmation code: "
+                                + confirmationCode));
+    }
+
     public List<Booking> findByConfirmationCodeContaining(
             String confirmationCode) {
         return bookingRepository
                 .findByConfirmationCodeContaining(confirmationCode);
     }
 
-    public Booking createBooking(Booking booking) {
+    public Booking create(Booking booking) {
         try {
             return bookingRepository.save(booking);
         } catch (IllegalArgumentException e) {

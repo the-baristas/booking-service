@@ -1,6 +1,6 @@
 package com.utopia.bookingservice.entity;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -13,11 +13,16 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 import lombok.Data;
 
 @Data
 @Entity
 @Table(name = "flight")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
 public class Flight {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,11 +33,15 @@ public class Flight {
     @JoinColumn(name = "route_id")
     private Route route;
 
+    @ManyToOne
+    @JoinColumn(name = "airplane_id")
+    private Airplane airplane;
+
     @Column(name = "departure_time")
-    private ZonedDateTime departureTime;
+    private LocalDateTime departureTime;
 
     @Column(name = "arrival_time")
-    private ZonedDateTime arrivalTime;
+    private LocalDateTime arrivalTime;
 
     @Column(name = "is_active")
     private Boolean active;
