@@ -36,7 +36,7 @@ public class CreatingBookingDto {
 
     @NotNull
     private String airplaneModel;
-    
+
     @NotNull
     private LocalDateTime departureTime;
 

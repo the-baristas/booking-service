@@ -32,7 +32,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -51,8 +50,9 @@ public class BookingController {
     private final DtoConverter dtoConverter;
 
     public BookingController(BookingService bookingService,
-            FlightService flightService, PassengerService passengerService, UserService userService,
-            ModelMapper modelMapper, DtoConverter dtoConverter) {
+            FlightService flightService, PassengerService passengerService,
+            UserService userService, ModelMapper modelMapper,
+            DtoConverter dtoConverter) {
         this.bookingService = bookingService;
         this.flightService = flightService;
         this.passengerService = passengerService;
@@ -155,7 +155,8 @@ public class BookingController {
         creatingPassenger.setSeatNumber(creatingBookingDto.getSeatNumber());
         creatingPassenger.setCheckInGroup(creatingBookingDto.getCheckInGroup());
 
-        User user = userService.findByUsername(creatingBookingDto.getUsername());
+        User user = userService
+                .findByUsername(creatingBookingDto.getUsername());
         creatingBooking.setUser(user);
         Booking newBooking = bookingService.create(creatingBooking);
         creatingPassenger.setBooking(newBooking);
