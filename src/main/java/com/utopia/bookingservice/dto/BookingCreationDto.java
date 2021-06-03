@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,9 +15,18 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreatingPassengerDto {
+public class BookingCreationDto {
     @NotBlank
-    private String bookingConfirmationCode;
+    private String confirmationCode;
+
+    @PositiveOrZero
+    private Integer layoverCount;
+
+    @PositiveOrZero
+    private Double totalPrice;
+
+    @NotBlank
+    private String username;
 
     @NotBlank
     private String originAirportCode;
@@ -26,12 +36,15 @@ public class CreatingPassengerDto {
 
     @NotNull
     private String airplaneModel;
-    
+
     @NotNull
     private LocalDateTime departureTime;
 
     @NotNull
     private LocalDateTime arrivalTime;
+
+    @NotBlank
+    private String discountType;
 
     @NotBlank
     private String givenName;

@@ -18,7 +18,7 @@ public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "stripe_id")
-    private Long stripeId;
+    private String stripeId;
 
     @OneToOne
     @JoinColumn(name = "booking_id", referencedColumnName = "id")
