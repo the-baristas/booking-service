@@ -46,6 +46,24 @@ public class Flight {
     @Column(name = "is_active")
     private Boolean active;
 
+    @Column(name = "first_reserved")
+    private Integer reservedFirstClassSeatsCount;
+
+    @Column(name = "first_price")
+    private Double firstClassPrice;
+
+    @Column(name = "business_reserved")
+    private Integer reservedBusinessClassSeatsCount;
+
+    @Column(name = "business_price")
+    private Double businessClassPrice;
+
+    @Column(name = "economy_reserved")
+    private Integer reservedEconomyClassSeatsCount;
+
+    @Column(name = "economy_price")
+    private Double economyClassPrice;
+
     @OneToMany(mappedBy = "flight")
     private List<Passenger> passengers;
 }
