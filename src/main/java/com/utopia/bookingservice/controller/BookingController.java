@@ -1,7 +1,6 @@
 package com.utopia.bookingservice.controller;
 
 import java.text.ParseException;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,9 +9,6 @@ import javax.validation.Valid;
 import com.utopia.bookingservice.dto.BookingCreationDto;
 import com.utopia.bookingservice.dto.BookingDto;
 import com.utopia.bookingservice.entity.Booking;
-import com.utopia.bookingservice.entity.Discount;
-import com.utopia.bookingservice.entity.Flight;
-import com.utopia.bookingservice.entity.Passenger;
 import com.utopia.bookingservice.entity.User;
 import com.utopia.bookingservice.exception.ModelMapperFailedException;
 import com.utopia.bookingservice.propertymap.BookingCreationDtoMap;
@@ -39,11 +35,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 public class BookingController {
-    private static final Integer childDiscountAge = 2;
-    private static final Integer edlerDiscountAge = 65;
     private static final Double checkInGroupUpgradePrice = 50d;
     private static final Double classUpgradeRate = 0.15;
-    private static final Double layoverDiscountRate = 0.1;
 
     private final BookingService bookingService;
     private final FlightService flightService;
@@ -114,44 +107,16 @@ public class BookingController {
         Booking creatingBooking = modelMapper.map(bookingCreationDto,
                 Booking.class);
 
-        Passenger creatingPassenger = new Passenger();
-        String originAirportCode = bookingCreationDto.getOriginAirportCode();
-        String destinationAirportCode = bookingCreationDto
-                .getDestinationAirportCode();
-        String airplaneModel = bookingCreationDto.getAirplaneModel();
-        LocalDateTime departureTime = bookingCreationDto.getDepartureTime();
-        LocalDateTime arrivalTime = bookingCreationDto.getArrivalTime();
-
-        Flight flight = flightService.identifyFlight(originAirportCode,
-                destinationAirportCode, airplaneModel, departureTime,
-                arrivalTime);
-        creatingPassenger.setFlight(flight);
-
-        Discount discount = new Discount();
-        discount.setDiscountType(bookingCreationDto.getDiscountType());
-
-        creatingPassenger.setDiscount(discount);
-        creatingPassenger.setGivenName(bookingCreationDto.getGivenName());
-        creatingPassenger.setFamilyName(bookingCreationDto.getFamilyName());
-        creatingPassenger.setDateOfBirth(bookingCreationDto.getDateOfBirth());
-        creatingPassenger.setGender(bookingCreationDto.getGender());
-        creatingPassenger.setAddress(bookingCreationDto.getAddress());
-        creatingPassenger.setSeatClass(bookingCreationDto.getSeatClass());
-        creatingPassenger.setSeatNumber(bookingCreationDto.getSeatNumber());
-        creatingPassenger.setCheckInGroup(bookingCreationDto.getCheckInGroup());
-
         User user = userService
                 .findByUsername(bookingCreationDto.getUsername());
         creatingBooking.setUser(user);
 
+        creatingBooking.setTotalPrice(0d);
         Booking newBooking = bookingService.create(creatingBooking);
-        creatingPassenger.setBooking(newBooking);
-
-        passengerService.create(creatingPassenger);
-        return ResponseEntity
-                .created(builder.path("/bookings/{id}")
-                        .build(newBooking.getId()))
-                .body(convertToDto(newBooking));
+        BookingDto newBookingDto = convertToDto(newBooking);
+        return ResponseEntity.created(
+                builder.path("/bookings/{id}").build(newBooking.getId()))
+                .body(newBookingDto);
     }
 
     @PutMapping("bookings/{id}")
