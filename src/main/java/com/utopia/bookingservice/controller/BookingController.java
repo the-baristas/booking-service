@@ -7,16 +7,16 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+import com.utopia.bookingservice.dto.BookingCreationDto;
 import com.utopia.bookingservice.dto.BookingDto;
-import com.utopia.bookingservice.dto.CreatingBookingDto;
-import com.utopia.bookingservice.dto.FlightDto;
 import com.utopia.bookingservice.entity.Booking;
 import com.utopia.bookingservice.entity.Discount;
 import com.utopia.bookingservice.entity.Flight;
 import com.utopia.bookingservice.entity.Passenger;
 import com.utopia.bookingservice.entity.User;
 import com.utopia.bookingservice.exception.ModelMapperFailedException;
-import com.utopia.bookingservice.propertymap.CreatingBookingDtoMap;
+import com.utopia.bookingservice.propertymap.BookingCreationDtoMap;
+import com.utopia.bookingservice.propertymap.FlightMap;
 import com.utopia.bookingservice.service.BookingService;
 import com.utopia.bookingservice.service.FlightService;
 import com.utopia.bookingservice.service.PassengerService;
@@ -32,14 +32,19 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
-@RequestMapping("/bookings")
 public class BookingController {
+    private static final Integer childDiscountAge = 2;
+    private static final Integer edlerDiscountAge = 65;
+    private static final Double checkInGroupUpgradePrice = 50d;
+    private static final Double classUpgradeRate = 0.15;
+    private static final Double layoverDiscountRate = 0.1;
+
     private final BookingService bookingService;
     private final FlightService flightService;
     private final PassengerService passengerService;
@@ -48,8 +53,9 @@ public class BookingController {
     private final DtoConverter dtoConverter;
 
     public BookingController(BookingService bookingService,
-            FlightService flightService, PassengerService passengerService, UserService userService,
-            ModelMapper modelMapper, DtoConverter dtoConverter) {
+            FlightService flightService, PassengerService passengerService,
+            UserService userService, ModelMapper modelMapper,
+            DtoConverter dtoConverter) {
         this.bookingService = bookingService;
         this.flightService = flightService;
         this.passengerService = passengerService;
@@ -64,32 +70,16 @@ public class BookingController {
                 map().setPhone(source.getUser().getPhone());
             }
         });
-        this.modelMapper.addMappings(new CreatingBookingDtoMap());
-        this.modelMapper.addMappings(new PropertyMap<Flight, FlightDto>() {
-            @Override
-            protected void configure() {
-                map().setRouteId(source.getRoute().getId());
-                map().setRouteActive(source.getRoute().getActive());
-
-                map().setOriginAirportCode(
-                        source.getRoute().getOriginAirport().getAirportCode());
-                map().setOriginAirportCity(
-                        source.getRoute().getOriginAirport().getCity());
-                map().setOriginAirportActive(
-                        source.getRoute().getOriginAirport().getActive());
-                map().setDestinationAirportCode(source.getRoute()
-                        .getDestinationAirport().getAirportCode());
-                map().setDestinationAirportCity(
-                        source.getRoute().getDestinationAirport().getCity());
-                map().setDestinationAirportActive(
-                        source.getRoute().getDestinationAirport().getActive());
-
-                map().setAirplaneModel(source.getAirplane().getModel());
-            }
-        });
+        this.modelMapper.addMappings(new BookingCreationDtoMap());
+        this.modelMapper.addMappings(new FlightMap());
     }
 
-    @GetMapping
+    @GetMapping("/")
+    public @ResponseBody ResponseEntity<String> checkHealth() {
+        return ResponseEntity.ok("Health is OK.");
+    }
+
+    @GetMapping("bookings")
     public ResponseEntity<List<BookingDto>> findAllBookings() {
         List<Booking> bookings = bookingService.findAllBookings();
         List<BookingDto> bookingDtos = bookings.stream()
@@ -98,7 +88,7 @@ public class BookingController {
         return ResponseEntity.ok(bookingDtos);
     }
 
-    @GetMapping("{confirmation_code}")
+    @GetMapping("bookings/{confirmation_code}")
     public ResponseEntity<BookingDto> findByConfirmationCode(
             @PathVariable("confirmation_code") String confirmationCode) {
         final Booking booking = bookingService
@@ -107,7 +97,7 @@ public class BookingController {
         return ResponseEntity.ok(bookingDto);
     }
 
-    @GetMapping("search")
+    @GetMapping("bookings/search")
     public ResponseEntity<List<BookingDto>> findBookingsByModelContaining(
             @RequestParam("confirmation_code") String confirmationCode) {
         List<Booking> bookings = bookingService
@@ -117,40 +107,46 @@ public class BookingController {
         return ResponseEntity.ok(bookingDtos);
     }
 
-    @PostMapping
+    @PostMapping("bookings")
     public ResponseEntity<BookingDto> createBooking(
-            @Valid @RequestBody CreatingBookingDto creatingBookingDto,
+            @Valid @RequestBody BookingCreationDto bookingCreationDto,
             UriComponentsBuilder builder) {
-        Booking creatingBooking = modelMapper.map(creatingBookingDto,
+        Booking creatingBooking = modelMapper.map(bookingCreationDto,
                 Booking.class);
 
         Passenger creatingPassenger = new Passenger();
-        String originAirportCode = creatingBookingDto.getOriginAirportCode();
-        String destinationAirportCode = creatingBookingDto
+        String originAirportCode = bookingCreationDto.getOriginAirportCode();
+        String destinationAirportCode = bookingCreationDto
                 .getDestinationAirportCode();
-        String airplaneModel = creatingBookingDto.getAirplaneModel();
-        LocalDateTime departureTime = creatingBookingDto.getDepartureTime();
-        LocalDateTime arrivalTime = creatingBookingDto.getArrivalTime();
+        String airplaneModel = bookingCreationDto.getAirplaneModel();
+        LocalDateTime departureTime = bookingCreationDto.getDepartureTime();
+        LocalDateTime arrivalTime = bookingCreationDto.getArrivalTime();
+
         Flight flight = flightService.identifyFlight(originAirportCode,
                 destinationAirportCode, airplaneModel, departureTime,
                 arrivalTime);
         creatingPassenger.setFlight(flight);
-        Discount discount = new Discount();
-        discount.setDiscountType(creatingBookingDto.getDiscountType());
-        creatingPassenger.setDiscount(discount);
-        creatingPassenger.setGivenName(creatingBookingDto.getGivenName());
-        creatingPassenger.setFamilyName(creatingBookingDto.getFamilyName());
-        creatingPassenger.setDateOfBirth(creatingBookingDto.getDateOfBirth());
-        creatingPassenger.setGender(creatingBookingDto.getGender());
-        creatingPassenger.setAddress(creatingBookingDto.getAddress());
-        creatingPassenger.setSeatClass(creatingBookingDto.getSeatClass());
-        creatingPassenger.setSeatNumber(creatingBookingDto.getSeatNumber());
-        creatingPassenger.setCheckInGroup(creatingBookingDto.getCheckInGroup());
 
-        User user = userService.findByUsername(creatingBookingDto.getUsername());
+        Discount discount = new Discount();
+        discount.setDiscountType(bookingCreationDto.getDiscountType());
+
+        creatingPassenger.setDiscount(discount);
+        creatingPassenger.setGivenName(bookingCreationDto.getGivenName());
+        creatingPassenger.setFamilyName(bookingCreationDto.getFamilyName());
+        creatingPassenger.setDateOfBirth(bookingCreationDto.getDateOfBirth());
+        creatingPassenger.setGender(bookingCreationDto.getGender());
+        creatingPassenger.setAddress(bookingCreationDto.getAddress());
+        creatingPassenger.setSeatClass(bookingCreationDto.getSeatClass());
+        creatingPassenger.setSeatNumber(bookingCreationDto.getSeatNumber());
+        creatingPassenger.setCheckInGroup(bookingCreationDto.getCheckInGroup());
+
+        User user = userService
+                .findByUsername(bookingCreationDto.getUsername());
         creatingBooking.setUser(user);
+
         Booking newBooking = bookingService.create(creatingBooking);
         creatingPassenger.setBooking(newBooking);
+
         passengerService.create(creatingPassenger);
         return ResponseEntity
                 .created(builder.path("/bookings/{id}")
@@ -158,7 +154,7 @@ public class BookingController {
                 .body(convertToDto(newBooking));
     }
 
-    @PutMapping("{id}")
+    @PutMapping("bookings/{id}")
     public ResponseEntity<BookingDto> updateBooking(@PathVariable Long id,
             @RequestBody BookingDto bookingDto)
             throws ModelMapperFailedException {
@@ -172,7 +168,7 @@ public class BookingController {
         return ResponseEntity.ok(convertToDto(updateBooking));
     }
 
-    @DeleteMapping("{id}")
+    @DeleteMapping("bookings/{id}")
     public ResponseEntity<String> deleteBooking(@PathVariable Long id)
             throws ModelMapperFailedException {
         bookingService.deleteBookingById(id);

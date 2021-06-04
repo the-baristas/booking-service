@@ -40,8 +40,8 @@
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-data-rest</artifactId>
-            <version>1.5.9</version>
+            <artifactId>springdoc-openapi-ui</artifactId>
+            <version>1.5.7</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

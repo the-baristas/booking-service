@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import javax.validation.Valid;
 
-import com.utopia.bookingservice.dto.CreatingPassengerDto;
+import com.utopia.bookingservice.dto.PassengerCreationDto;
 import com.utopia.bookingservice.dto.PassengerDto;
 import com.utopia.bookingservice.entity.Booking;
 import com.utopia.bookingservice.entity.Flight;
@@ -96,9 +96,9 @@ public class PassengerController {
 
     @PostMapping
     public ResponseEntity<PassengerDto> create(
-            @Valid @RequestBody CreatingPassengerDto creatingPassengerDto,
+            @Valid @RequestBody PassengerCreationDto passengerCreationDto,
             UriComponentsBuilder builder) {
-        Passenger creatingPassenger = modelMapper.map(creatingPassengerDto,
+        Passenger creatingPassenger = modelMapper.map(passengerCreationDto,
                 Passenger.class);
 
         Booking booking = bookingService.findByConfirmationCode(

@@ -13,6 +13,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -57,4 +58,15 @@ public class Booking {
 
     @OneToMany(mappedBy = "booking")
     private List<Passenger> passengers;
+
+    // @OneToOne
+    // @JoinTable(name = "booking_payment",
+    //         joinColumns = { @JoinColumn(name = "booking_id",
+    //                 referencedColumnName = "id") },
+    //         inverseJoinColumns = { @JoinColumn(name = "stripe_id",
+    //                 referencedColumnName = "id") })
+    // private BookingPayment bookingPayment;
+
+    @OneToOne(mappedBy = "booking")
+    private Payment payment;
 }
