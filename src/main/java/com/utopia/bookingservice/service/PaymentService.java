@@ -32,17 +32,19 @@ public class PaymentService {
         Stripe.apiKey = secretKey;
     }
 
-    public String createPaymentIntent(Map<String, Object> paymentInfo, Long bookingId)
+    public Payment createPayment(Payment payment){
+        try {
+            return paymentRepository.save(payment);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Could not create payment for booking with id: " + payment.getBooking().getId(), e);
+        }
+    }
+
+    public String createPaymentIntent(Map<String, Object> paymentInfo)
             throws StripeException, ResponseStatusException {
         PaymentIntent intent = PaymentIntent.create(paymentInfo);
 
-        Payment payment = new Payment(bookingId, intent.getClientSecret(), false);
-        paymentRepository.save(payment);
-
         return intent.getClientSecret();
-    }
-
-    public String getSecretKey(){
-        return secretKey;
     }
 }

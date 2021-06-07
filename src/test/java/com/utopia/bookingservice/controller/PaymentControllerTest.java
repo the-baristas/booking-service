@@ -2,7 +2,10 @@ package com.utopia.bookingservice.controller;
 
 import com.stripe.exception.StripeException;
 
+import com.utopia.bookingservice.dto.PaymentDto;
 import com.utopia.bookingservice.dto.PaymentIntentInfoDto;
+import com.utopia.bookingservice.entity.Booking;
+import com.utopia.bookingservice.entity.Payment;
 import com.utopia.bookingservice.service.PaymentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,18 +49,33 @@ public class PaymentControllerTest {
 
     @Test
     public void testCreatePaymentIntent() throws StripeException {
-        PaymentIntentInfoDto paymentInfo = new PaymentIntentInfoDto(9001, "usd", 1L);
+        PaymentIntentInfoDto paymentInfo = new PaymentIntentInfoDto(9001, "usd");
         HashMap<String, Object> paymentInfoMap = new HashMap<String, Object>();
         paymentInfoMap.put("amount", paymentInfo.getAmount());
         paymentInfoMap.put("currency", paymentInfo.getCurrency());
 
-        when(paymentService.createPaymentIntent(paymentInfoMap, paymentInfo.getBookingId())).thenReturn("clientSecretHushHush");
+        when(paymentService.createPaymentIntent(paymentInfoMap)).thenReturn("clientSecretHushHush");
 
         webTestClient.post().uri("/payments/payment-intent")
                 .contentType(MediaType.APPLICATION_JSON).bodyValue(paymentInfo)
                 .exchange().expectStatus().isOk().expectHeader()
                 .contentType(MediaType.APPLICATION_JSON)
                 .expectBody(String.class).isEqualTo("{\"clientSecret\":\"clientSecretHushHush\"}");
+    }
+
+    @Test void testCreatePayment() {
+        PaymentDto paymentDto = new PaymentDto(1L, "stripeid", false);
+        Booking booking = new Booking();
+        booking.setId(paymentDto.getBookingId());
+        Payment payment = new Payment(booking, paymentDto.getStripeId(), paymentDto.isRefunded());
+
+        when(paymentService.createPayment(payment)).thenReturn(payment);
+
+        webTestClient.post().uri("/payments")
+                .contentType(MediaType.APPLICATION_JSON).bodyValue(paymentDto)
+                .exchange().expectStatus().isOk().expectHeader()
+                .contentType(MediaType.APPLICATION_JSON)
+                .expectBody(PaymentDto.class).isEqualTo(paymentDto);
     }
 
 }
