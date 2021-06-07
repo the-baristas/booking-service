@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreatingPassengerDto {
+public class PassengerCreationDto {
     @NotBlank
     private String bookingConfirmationCode;
 

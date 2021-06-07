@@ -1,12 +1,12 @@
 package com.utopia.bookingservice.propertymap;
 
-import com.utopia.bookingservice.dto.CreatingPassengerDto;
+import com.utopia.bookingservice.dto.PassengerCreationDto;
 import com.utopia.bookingservice.entity.Passenger;
 
 import org.modelmapper.PropertyMap;
 
 public class CreatingPassengerDtoMap
-        extends PropertyMap<CreatingPassengerDto, Passenger> {
+        extends PropertyMap<PassengerCreationDto, Passenger> {
     @Override
     protected void configure() {
         map().getBooking()
