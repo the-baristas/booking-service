@@ -1,29 +1,31 @@
 package com.utopia.bookingservice.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
-import lombok.Data;
-
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "payment")
 public class Payment {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "stripe_id")
-    private String stripeId;
 
     @OneToOne
     @JoinColumn(name = "booking_id", referencedColumnName = "id")
     private Booking booking;
 
+    @Id
+    @Column(name = "stripe_id")
+    private String stripeId;
+
     @Column(name = "refunded")
-    private Boolean refunded;
+    private boolean refunded;
 }
