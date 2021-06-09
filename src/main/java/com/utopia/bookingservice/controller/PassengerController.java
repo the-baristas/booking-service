@@ -37,9 +37,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RestController
 @RequestMapping("passengers")
 public class PassengerController {
-    private static final Integer childDiscountAge = 2;
-    private static final Integer edlerDiscountAge = 65;
-    private static final Double layoverDiscountRate = 0.1;
+    private static final Integer CHILD_DISCOUNT_AGE = 2;
+    private static final Integer ELDER_DISCOUNT_AGE = 65;
+    private static final Double LAYOVER_DISCOUNT_RATE = 0.1;
 
     private final PassengerService passengerService;
     private final BookingService bookingService;
@@ -162,7 +162,7 @@ public class PassengerController {
     private Double calculateTotalPrice(Double basePrice, Double discountRate,
             Integer layoverCount) {
         if (layoverCount > 0) {
-            discountRate += layoverDiscountRate;
+            discountRate += LAYOVER_DISCOUNT_RATE;
         }
         return basePrice * discountRate;
     }

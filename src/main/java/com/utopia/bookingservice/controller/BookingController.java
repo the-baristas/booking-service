@@ -14,8 +14,6 @@ import com.utopia.bookingservice.exception.ModelMapperFailedException;
 import com.utopia.bookingservice.propertymap.BookingCreationDtoMap;
 import com.utopia.bookingservice.propertymap.FlightMap;
 import com.utopia.bookingservice.service.BookingService;
-import com.utopia.bookingservice.service.FlightService;
-import com.utopia.bookingservice.service.PassengerService;
 import com.utopia.bookingservice.service.UserService;
 import com.utopia.bookingservice.util.DtoConverter;
 
@@ -35,23 +33,18 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 public class BookingController {
-    private static final Double checkInGroupUpgradePrice = 50d;
-    private static final Double classUpgradeRate = 0.15;
+    private static final Double CHECK_IN_GROUP_UPGRADE_PRICE = 50d;
+    private static final Double SEAT_CLASS_UPGRADE_RATE = 0.15;
 
     private final BookingService bookingService;
-    private final FlightService flightService;
-    private final PassengerService passengerService;
     private final UserService userService;
     private final ModelMapper modelMapper;
     private final DtoConverter dtoConverter;
 
     public BookingController(BookingService bookingService,
-            FlightService flightService, PassengerService passengerService,
             UserService userService, ModelMapper modelMapper,
             DtoConverter dtoConverter) {
         this.bookingService = bookingService;
-        this.flightService = flightService;
-        this.passengerService = passengerService;
         this.userService = userService;
         this.dtoConverter = dtoConverter;
         this.modelMapper = modelMapper;
