@@ -1,6 +1,5 @@
 package com.utopia.bookingservice.controller;
 
-import java.text.ParseException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,6 +7,7 @@ import javax.validation.Valid;
 
 import com.utopia.bookingservice.dto.BookingCreationDto;
 import com.utopia.bookingservice.dto.BookingDto;
+import com.utopia.bookingservice.dto.BookingUpdateDto;
 import com.utopia.bookingservice.entity.Booking;
 import com.utopia.bookingservice.entity.User;
 import com.utopia.bookingservice.exception.ModelMapperFailedException;
@@ -17,8 +17,11 @@ import com.utopia.bookingservice.service.BookingService;
 import com.utopia.bookingservice.service.UserService;
 import com.utopia.bookingservice.util.DtoConverter;
 
+import org.hibernate.MappingException;
+import org.modelmapper.ConfigurationException;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -58,6 +61,13 @@ public class BookingController {
         });
         this.modelMapper.addMappings(new BookingCreationDtoMap());
         this.modelMapper.addMappings(new FlightMap());
+        this.modelMapper
+                .addMappings(new PropertyMap<BookingUpdateDto, Booking>() {
+                    @Override
+                    protected void configure() {
+                        map().getUser().setUsername(source.getUsername());
+                    }
+                });
     }
 
     @GetMapping("/")
@@ -93,6 +103,19 @@ public class BookingController {
         return ResponseEntity.ok(bookingDtos);
     }
 
+    @GetMapping("bookings/username/{username}")
+    public ResponseEntity<Page<BookingDto>> findByUsername(
+            @PathVariable("username") String username,
+            @RequestParam("index") Integer pageIndex,
+            @RequestParam("size") Integer pageSize) {
+        Page<Booking> bookingsPage = bookingService.findByUsername(username,
+                pageIndex, pageSize);
+        Page<BookingDto> bookingDtosPage = bookingsPage
+                .map((Booking booking) -> modelMapper.map(booking,
+                        BookingDto.class));
+        return ResponseEntity.ok(bookingDtosPage);
+    }
+
     @PostMapping("bookings")
     public ResponseEntity<BookingDto> createBooking(
             @Valid @RequestBody BookingCreationDto bookingCreationDto,
@@ -114,16 +137,20 @@ public class BookingController {
 
     @PutMapping("bookings/{id}")
     public ResponseEntity<BookingDto> updateBooking(@PathVariable Long id,
-            @RequestBody BookingDto bookingDto)
+            @Valid @RequestBody BookingUpdateDto bookingUpdateDto)
             throws ModelMapperFailedException {
-        Booking booking;
+        Booking updatingBooking;
         try {
-            booking = convertToEntity(bookingDto);
-        } catch (ParseException e) {
+            updatingBooking = modelMapper.map(bookingUpdateDto, Booking.class);
+        } catch (IllegalArgumentException | ConfigurationException
+                | MappingException e) {
             throw new ModelMapperFailedException(e);
         }
-        Booking updateBooking = bookingService.updateBooking(id, booking);
-        return ResponseEntity.ok(convertToDto(updateBooking));
+        User user = userService.findByUsername(bookingUpdateDto.getUsername());
+        updatingBooking.setUser(user);
+        Booking updatedBooking = bookingService.updateBooking(id,
+                updatingBooking);
+        return ResponseEntity.ok(convertToDto(updatedBooking));
     }
 
     @DeleteMapping("bookings/{id}")
@@ -137,8 +164,7 @@ public class BookingController {
         return modelMapper.map(booking, BookingDto.class);
     }
 
-    private Booking convertToEntity(BookingDto bookingDto)
-            throws ParseException {
+    private Booking convertToEntity(BookingDto bookingDto) {
         return modelMapper.map(bookingDto, Booking.class);
     }
 }

@@ -1,22 +1,20 @@
 package com.utopia.bookingservice.service;
 
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
+
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
-import com.stripe.model.Charge;
 import com.stripe.model.PaymentIntent;
-import com.utopia.bookingservice.entity.ChargeRequest;
 import com.utopia.bookingservice.entity.Payment;
 import com.utopia.bookingservice.repository.PaymentRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import javax.annotation.PostConstruct;
-import javax.xml.ws.Response;
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 public class PaymentService {
@@ -24,7 +22,7 @@ public class PaymentService {
     @Autowired
     private PaymentRepository paymentRepository;
 
-    @Value("${stripe.secretTestKey}")
+    @Value("${STRIPE_SECRET_KEY}")
     private String secretKey;
 
     @PostConstruct

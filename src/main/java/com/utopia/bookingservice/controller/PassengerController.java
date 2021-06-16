@@ -83,12 +83,12 @@ public class PassengerController {
             @RequestParam("term") String searchTerm,
             @RequestParam("index") Integer pageIndex,
             @RequestParam("size") Integer pageSize) {
-        Page<Passenger> passengers = passengerService
+        Page<Passenger> passengersPage = passengerService
                 .findByConfirmationCodeOrUsernameContaining(searchTerm,
                         pageIndex, pageSize);
-        Page<PassengerDto> passengerDtos = passengers
+        Page<PassengerDto> passengerDtosPage = passengersPage
                 .map(this::convertPassengerToDto);
-        return ResponseEntity.ok(passengerDtos);
+        return ResponseEntity.ok(passengerDtosPage);
     }
 
     @GetMapping("distinct_search")
