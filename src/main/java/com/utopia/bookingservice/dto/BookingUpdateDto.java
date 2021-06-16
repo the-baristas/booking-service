@@ -10,12 +10,15 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class BookingCreationDto {
+public class BookingUpdateDto {
     @NotBlank
     private String confirmationCode;
 
     @PositiveOrZero
     private Integer layoverCount;
+
+    @PositiveOrZero
+    private Double totalPrice;
 
     @NotBlank
     private String username;

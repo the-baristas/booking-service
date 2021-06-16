@@ -5,6 +5,9 @@ import java.util.List;
 import com.utopia.bookingservice.entity.Booking;
 import com.utopia.bookingservice.repository.BookingRepository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,8 +24,7 @@ public class BookingService {
     }
 
     public Booking findByConfirmationCode(String confirmationCode) {
-        return bookingRepository
-                .findByConfirmationCode(confirmationCode)
+        return bookingRepository.findByConfirmationCode(confirmationCode)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Could not find booking with confirmation code: "
@@ -33,6 +35,16 @@ public class BookingService {
             String confirmationCode) {
         return bookingRepository
                 .findByConfirmationCodeContaining(confirmationCode);
+    }
+
+    public Page<Booking> findByUsername(String username, Integer pageIndex, Integer pageSize) {
+        Pageable pageable = PageRequest.of(pageIndex, pageSize);
+        try {
+            return bookingRepository.findByUsername(username, pageable);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Could not find booking with username: " + username);
+        }
     }
 
     public Booking create(Booking booking) {

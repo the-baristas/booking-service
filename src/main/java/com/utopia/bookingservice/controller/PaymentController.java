@@ -1,20 +1,26 @@
 package com.utopia.bookingservice.controller;
 
-import com.stripe.exception.StripeException;
-import com.stripe.model.Charge;
-import com.utopia.bookingservice.dto.BookingDto;
-import com.utopia.bookingservice.dto.PaymentDto;
-import com.utopia.bookingservice.dto.PaymentIntentInfoDto;
-import com.utopia.bookingservice.entity.Booking;
-import com.utopia.bookingservice.entity.ChargeRequest;
-import com.utopia.bookingservice.entity.Payment;
-import com.utopia.bookingservice.service.PaymentService;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
 import java.text.ParseException;
 import java.util.HashMap;
+
+import com.stripe.exception.StripeException;
+import com.utopia.bookingservice.dto.PaymentDto;
+import com.utopia.bookingservice.dto.PaymentIntentInfoDto;
+import com.utopia.bookingservice.entity.Payment;
+import com.utopia.bookingservice.service.PaymentService;
+
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(path="/payments")
@@ -52,13 +58,13 @@ public class PaymentController {
 
     @PostMapping("")
     public PaymentDto createPayment(@RequestBody PaymentDto paymentDto) throws ParseException {
-        System.out.println(paymentDto);
         Payment payment = convertToEntity(paymentDto);
         payment.setStripeId(paymentDto.getStripeId());
-        System.out.println(payment);
-        System.out.println(convertToDto(paymentService.createPayment(payment)));
         return convertToDto(paymentService.createPayment(payment));
     }
+
+    // @DeleteMapping("{stripe_id}")
+    // public ResponseEntity<Void> deletePayment(@PathVariable String stripeId) {}
 
     @ExceptionHandler(StripeException.class)
     public String handleError(StripeException e){
