@@ -3,6 +3,7 @@ package com.utopia.bookingservice.service;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
+import javax.transaction.Transactional;
 
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
@@ -26,16 +27,37 @@ public class PaymentService {
     private String secretKey;
 
     @PostConstruct
-    public void init(){
+    public void init() {
         Stripe.apiKey = secretKey;
     }
 
-    public Payment createPayment(Payment payment){
+    public Payment findByStripeId(String stripeId) {
+        return paymentRepository.findByStripeId(stripeId).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    public Payment createPayment(Payment payment) {
         try {
             return paymentRepository.save(payment);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Could not create payment for booking with id: " + payment.getBooking().getId(), e);
+                    "Could not create payment for booking with id: "
+                            + payment.getBooking().getId(),
+                    e);
+        }
+    }
+
+    @Transactional
+    public void deleteByStripeId(String stripeId) {
+        paymentRepository.findByStripeId(stripeId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Could not find payment with stripd ID: " + stripeId));
+        try {
+            paymentRepository.deleteByStripeId(stripeId);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Could not delete payment with stripe ID: " + stripeId, e);
         }
     }
 

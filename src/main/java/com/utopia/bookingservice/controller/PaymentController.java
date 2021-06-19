@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(path="/payments")
+@RequestMapping(path = "/payments")
 @CrossOrigin
 public class PaymentController {
 
@@ -32,42 +32,59 @@ public class PaymentController {
     @Autowired
     private PaymentService paymentService;
 
-    public PaymentController(PaymentService paymentService, ModelMapper modelMapper){
+    public PaymentController(PaymentService paymentService,
+            ModelMapper modelMapper) {
         this.paymentService = paymentService;
         this.modelMapper = modelMapper;
     }
 
     @GetMapping("/health")
-    public String health(){
+    public String health() {
         return "ye";
     }
 
-    @PostMapping("/payment-intent")
-    public HashMap<String, String> createPaymentIntent(@RequestBody PaymentIntentInfoDto paymentInfo) throws StripeException {
+    @GetMapping("{stripe_id}")
+    public ResponseEntity<PaymentDto> findByStripeId(
+            @PathVariable("stripe_id") String stripeId) {
+        Payment payment = paymentService.findByStripeId(stripeId);
+        PaymentDto paymentDto = modelMapper.map(payment, PaymentDto.class);
+        return ResponseEntity.ok(paymentDto);
+    }
 
-        //Stripe API requires a Map<String, Object>
+    @PostMapping("/payment-intent")
+    public HashMap<String, String> createPaymentIntent(
+            @RequestBody PaymentIntentInfoDto paymentInfo)
+            throws StripeException {
+
+        // Stripe API requires a Map<String, Object>
         HashMap<String, Object> paymentInfoMap = new HashMap<String, Object>();
         paymentInfoMap.put("amount", paymentInfo.getAmount());
         paymentInfoMap.put("currency", paymentInfo.getCurrency());
 
-        //return the clientSecret which was just created
+        // return the clientSecret which was just created
         HashMap<String, String> toReturn = new HashMap<String, String>();
-        toReturn.put("clientSecret", paymentService.createPaymentIntent(paymentInfoMap));
+        toReturn.put("clientSecret",
+                paymentService.createPaymentIntent(paymentInfoMap));
         return toReturn;
     }
 
     @PostMapping("")
-    public PaymentDto createPayment(@RequestBody PaymentDto paymentDto) throws ParseException {
+    public PaymentDto createPayment(@RequestBody PaymentDto paymentDto)
+            throws ParseException {
         Payment payment = convertToEntity(paymentDto);
         payment.setStripeId(paymentDto.getStripeId());
         return convertToDto(paymentService.createPayment(payment));
     }
 
-    // @DeleteMapping("{stripe_id}")
-    // public ResponseEntity<Void> deletePayment(@PathVariable String stripeId) {}
+    @DeleteMapping("{stripe_id}")
+    public ResponseEntity<Void> deletePayment(
+            @PathVariable("stripe_id") String stripeId) {
+        paymentService.deleteByStripeId(stripeId);
+        return ResponseEntity.noContent().build();
+    }
 
     @ExceptionHandler(StripeException.class)
-    public String handleError(StripeException e){
+    public String handleError(StripeException e) {
         return e.getMessage();
     }
 
