@@ -17,6 +17,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByConfirmationCodeContaining(String confirmationCode);
 
-    @Query("Select b FROM Booking b WHERE b.user.username = :username")
+    @Query("Select b FROM Booking b WHERE b.user.username = :username ORDER BY b.id DESC")
     Page<Booking> findByUsername(String username, Pageable pageable);
 }
