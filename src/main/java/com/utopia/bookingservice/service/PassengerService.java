@@ -102,7 +102,6 @@ public class PassengerService {
                 + +calculateTotalPrice(basePrice, discountRate, layoverCount);
         booking.setTotalPrice(totalPrice);
         passengerToCreate.setBooking(booking);
-
         try {
             return passengerRepository.save(passengerToCreate);
         } catch (IllegalArgumentException e) {

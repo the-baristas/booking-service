@@ -2,22 +2,15 @@ package com.utopia.bookingservice.controller;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Period;
 
 import javax.validation.Valid;
 
 import com.utopia.bookingservice.dto.PassengerCreationDto;
 import com.utopia.bookingservice.dto.PassengerDto;
-import com.utopia.bookingservice.entity.Booking;
-import com.utopia.bookingservice.entity.Discount;
-import com.utopia.bookingservice.entity.Flight;
 import com.utopia.bookingservice.entity.Passenger;
 import com.utopia.bookingservice.propertymap.CreatingPassengerDtoMap;
 import com.utopia.bookingservice.propertymap.PassengerDtoMap;
 import com.utopia.bookingservice.propertymap.PassengerMap;
-import com.utopia.bookingservice.service.BookingService;
-import com.utopia.bookingservice.service.DiscountService;
-import com.utopia.bookingservice.service.FlightService;
 import com.utopia.bookingservice.service.PassengerService;
 
 import org.modelmapper.ModelMapper;
@@ -42,18 +35,11 @@ public class PassengerController {
     private static final Double LAYOVER_DISCOUNT_RATE = 0.1;
 
     private final PassengerService passengerService;
-    private final BookingService bookingService;
-    private final FlightService flightService;
-    private final DiscountService discountService;
     private final ModelMapper modelMapper;
 
     public PassengerController(PassengerService passengerService,
-            BookingService bookingService, FlightService flightService,
-            DiscountService discountService, ModelMapper modelMapper) {
+            ModelMapper modelMapper) {
         this.passengerService = passengerService;
-        this.bookingService = bookingService;
-        this.flightService = flightService;
-        this.discountService = discountService;
         this.modelMapper = modelMapper;
         this.modelMapper.addMappings(new PassengerMap());
         this.modelMapper.addMappings(new PassengerDtoMap());
