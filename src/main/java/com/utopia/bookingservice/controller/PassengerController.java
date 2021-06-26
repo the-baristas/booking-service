@@ -108,7 +108,7 @@ public class PassengerController {
     public ResponseEntity<PassengerDto> create(
             @Valid @RequestBody PassengerCreationDto passengerCreationDto,
             UriComponentsBuilder builder) {
-        Passenger creatingPassenger = modelMapper.map(passengerCreationDto,
+        Passenger passengerToCreate = modelMapper.map(passengerCreationDto,
                 Passenger.class);
 
         String originAirportCode = passengerCreationDto.getOriginAirportCode();
@@ -117,54 +117,18 @@ public class PassengerController {
         String airplaneModel = passengerCreationDto.getAirplaneModel();
         LocalDateTime departureTime = passengerCreationDto.getDepartureTime();
         LocalDateTime arrivalTime = passengerCreationDto.getArrivalTime();
-        Flight flight = flightService.identifyFlight(originAirportCode,
-                destinationAirportCode, airplaneModel, departureTime,
-                arrivalTime);
-        creatingPassenger.setFlight(flight);
+        String seatClass = passengerCreationDto.getSeatClass();
+        LocalDate dateOfBirth = passengerCreationDto.getDateOfBirth();
 
-        Double basePrice = 0d;
-        if (passengerCreationDto.getSeatClass() == "first") {
-            basePrice = flight.getFirstClassPrice();
-        } else if (passengerCreationDto.getSeatClass() == "business") {
-            basePrice = flight.getBusinessClassPrice();
-        } else if (passengerCreationDto.getSeatClass() == "economy") {
-            basePrice = flight.getEconomyClassPrice();
-        }
-        Integer age = Period
-                .between(passengerCreationDto.getDateOfBirth(), LocalDate.now())
-                .getYears();
-        Discount discount;
-        if (age <= 2) {
-            discount = discountService.findByDiscountType("child");
-        } else if (age >= 65) {
-            discount = discountService.findByDiscountType("elderly");
-        } else {
-            discount = discountService.findByDiscountType("none");
-        }
-        creatingPassenger.setDiscount(discount);
-        Double discountRate = discount.getDiscountRate();
-        Booking booking = bookingService.findByConfirmationCode(
-                creatingPassenger.getBooking().getConfirmationCode());
-        Integer layoverCount = booking.getLayoverCount();
-        booking.setTotalPrice(booking.getTotalPrice()
-                + calculateTotalPrice(basePrice, discountRate, layoverCount));
-        creatingPassenger.setBooking(booking);
-
-        Passenger createdPassenger = passengerService.create(creatingPassenger);
+        Passenger createdPassenger = passengerService.create(passengerToCreate,
+                originAirportCode, destinationAirportCode, airplaneModel,
+                departureTime, arrivalTime, seatClass, dateOfBirth);
         PassengerDto createdPassengerDto = modelMapper.map(createdPassenger,
                 PassengerDto.class);
         return ResponseEntity
                 .created(builder.path("/passengers/{id}")
                         .build(createdPassengerDto.getId()))
                 .body(createdPassengerDto);
-    }
-
-    private Double calculateTotalPrice(Double basePrice, Double discountRate,
-            Integer layoverCount) {
-        if (layoverCount > 0) {
-            discountRate += LAYOVER_DISCOUNT_RATE;
-        }
-        return basePrice * discountRate;
     }
 
     @PutMapping("{id}")
