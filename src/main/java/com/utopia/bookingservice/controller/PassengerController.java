@@ -16,6 +16,7 @@ import com.utopia.bookingservice.service.PassengerService;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,6 +47,7 @@ public class PassengerController {
         this.modelMapper.addMappings(new CreatingPassengerDtoMap());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<Page<PassengerDto>> findAll(
             @RequestParam("index") Integer pageIndex,
@@ -57,6 +59,7 @@ public class PassengerController {
         return ResponseEntity.ok(passengerDtos);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("{id}")
     public ResponseEntity<PassengerDto> findById(@PathVariable Long id) {
         final Passenger passenger = passengerService.findById(id);
@@ -64,6 +67,7 @@ public class PassengerController {
         return ResponseEntity.ok(passengerDto);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("search")
     public ResponseEntity<Page<PassengerDto>> findByConfirmationCodeOrUsernameContaining(
             @RequestParam("term") String searchTerm,
@@ -77,6 +81,7 @@ public class PassengerController {
         return ResponseEntity.ok(passengerDtosPage);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("distinct_search")
     public ResponseEntity<Page<PassengerDto>> findDistinctByConfirmationCodeOrUsernameContaining(
             @RequestParam("term") String searchTerm,
@@ -90,6 +95,7 @@ public class PassengerController {
         return ResponseEntity.ok(passengerDtos);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @PostMapping
     public ResponseEntity<PassengerDto> create(
             @Valid @RequestBody PassengerCreationDto passengerCreationDto,
@@ -117,6 +123,7 @@ public class PassengerController {
                 .body(createdPassengerDto);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @PutMapping("{id}")
     public ResponseEntity<PassengerDto> update(@PathVariable Long id,
             @Valid @RequestBody PassengerDto passengerDto,
@@ -128,6 +135,7 @@ public class PassengerController {
         return ResponseEntity.ok(convertPassengerToDto(updatedPassenger));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @DeleteMapping("{id}")
     public ResponseEntity<Void> deleteById(@PathVariable Long id) {
         passengerService.deleteById(id);

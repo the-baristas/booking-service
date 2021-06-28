@@ -4,6 +4,8 @@
 
     SERVER_PORT
 
+    JWT_SECRET_KEY
+
     STRIPE_SECRET_KEY
 
 ### Development

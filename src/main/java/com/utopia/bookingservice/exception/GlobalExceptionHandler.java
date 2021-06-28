@@ -9,6 +9,7 @@ import org.modelmapper.MappingException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -42,6 +43,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             this.message = message;
             errors = Arrays.asList(error);
         }
+
+        public ApiError(HttpStatus status, String message) {
+            super();
+            this.status = status;
+            this.message = message;
+            errors = Arrays.asList();
+        }
     }
 
     @Override
@@ -64,25 +72,35 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 apiError.getStatus(), request);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public void handleIllegalArgumentException(Exception exception) {
-        throw new ModelMapperFailedException(exception);
-    }
-
-    @ExceptionHandler(ConfigurationException.class)
-    public void handleConfigurationException(Exception exception) {
-        throw new ModelMapperFailedException(exception);
-    }
-
-    @ExceptionHandler(MappingException.class)
-    public void handleMappingException(Exception exception) {
-        throw new ModelMapperFailedException(exception);
-    }
-
     @ExceptionHandler(ResponseStatusException.class)
     public void handleResponseStatusException(
             ResponseStatusException exception) {
         throw exception;
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public void handleIllegalArgumentException(
+            IllegalArgumentException exception) {
+        throw new ModelMapperFailedException(exception);
+    }
+
+    @ExceptionHandler(ConfigurationException.class)
+    public void handleConfigurationException(ConfigurationException exception) {
+        throw new ModelMapperFailedException(exception);
+    }
+
+    @ExceptionHandler(MappingException.class)
+    public void handleMappingException(MappingException exception) {
+        throw new ModelMapperFailedException(exception);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDeniedException(
+            AccessDeniedException exception) {
+        ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED,
+                exception.getLocalizedMessage(),
+                HttpStatus.UNAUTHORIZED.getReasonPhrase());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiError);
     }
 
     @ExceptionHandler(Exception.class)
@@ -90,6 +108,5 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         System.out.printf("An unknown error occurred.", exception);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(exception.getMessage());
-
     }
 }
