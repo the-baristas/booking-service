@@ -23,7 +23,7 @@ public class PaymentService {
     @Autowired
     private PaymentRepository paymentRepository;
 
-    @Value("${STRIPE_SECRET_KEY}")
+    @Value("${stripe.secret-key}")
     private String secretKey;
 
     @PostConstruct

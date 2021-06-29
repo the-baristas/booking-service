@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.modelmapper.ConfigurationException;
+import org.modelmapper.MappingException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -20,18 +23,33 @@ import lombok.Getter;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
-    @ExceptionHandler(ResponseStatusException.class)
-    public void handleResponseStatusException(
-            ResponseStatusException exception) {
-        throw exception;
-    }
+    @Getter
+    static class ApiError {
+        private HttpStatus status;
+        private String message;
+        private List<String> errors;
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleUncaughtException(Exception exception) {
-        System.out.printf("An unknown error occurred.", exception);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(exception.getMessage());
+        public ApiError(HttpStatus status, String message,
+                List<String> errors) {
+            super();
+            this.status = status;
+            this.message = message;
+            this.errors = errors;
+        }
 
+        public ApiError(HttpStatus status, String message, String error) {
+            super();
+            this.status = status;
+            this.message = message;
+            errors = Arrays.asList(error);
+        }
+
+        public ApiError(HttpStatus status, String message) {
+            super();
+            this.status = status;
+            this.message = message;
+            errors = Arrays.asList();
+        }
     }
 
     @Override
@@ -54,25 +72,41 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 apiError.getStatus(), request);
     }
 
-    @Getter
-    static class ApiError {
-        private HttpStatus status;
-        private String message;
-        private List<String> errors;
+    @ExceptionHandler(ResponseStatusException.class)
+    public void handleResponseStatusException(
+            ResponseStatusException exception) {
+        throw exception;
+    }
 
-        public ApiError(HttpStatus status, String message,
-                List<String> errors) {
-            super();
-            this.status = status;
-            this.message = message;
-            this.errors = errors;
-        }
+    @ExceptionHandler(IllegalArgumentException.class)
+    public void handleIllegalArgumentException(
+            IllegalArgumentException exception) {
+        throw new ModelMapperFailedException(exception);
+    }
 
-        public ApiError(HttpStatus status, String message, String error) {
-            super();
-            this.status = status;
-            this.message = message;
-            errors = Arrays.asList(error);
-        }
+    @ExceptionHandler(ConfigurationException.class)
+    public void handleConfigurationException(ConfigurationException exception) {
+        throw new ModelMapperFailedException(exception);
+    }
+
+    @ExceptionHandler(MappingException.class)
+    public void handleMappingException(MappingException exception) {
+        throw new ModelMapperFailedException(exception);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDeniedException(
+            AccessDeniedException exception) {
+        ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED,
+                exception.getLocalizedMessage(),
+                HttpStatus.UNAUTHORIZED.getReasonPhrase());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiError);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleUncaughtException(Exception exception) {
+        System.out.printf("An unknown error occurred.", exception);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(exception.getMessage());
     }
 }

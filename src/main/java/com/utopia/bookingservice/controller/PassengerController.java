@@ -2,27 +2,21 @@ package com.utopia.bookingservice.controller;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Period;
 
 import javax.validation.Valid;
 
 import com.utopia.bookingservice.dto.PassengerCreationDto;
 import com.utopia.bookingservice.dto.PassengerDto;
-import com.utopia.bookingservice.entity.Booking;
-import com.utopia.bookingservice.entity.Discount;
-import com.utopia.bookingservice.entity.Flight;
 import com.utopia.bookingservice.entity.Passenger;
 import com.utopia.bookingservice.propertymap.CreatingPassengerDtoMap;
 import com.utopia.bookingservice.propertymap.PassengerDtoMap;
 import com.utopia.bookingservice.propertymap.PassengerMap;
-import com.utopia.bookingservice.service.BookingService;
-import com.utopia.bookingservice.service.DiscountService;
-import com.utopia.bookingservice.service.FlightService;
 import com.utopia.bookingservice.service.PassengerService;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,24 +36,18 @@ public class PassengerController {
     private static final Double LAYOVER_DISCOUNT_RATE = 0.1;
 
     private final PassengerService passengerService;
-    private final BookingService bookingService;
-    private final FlightService flightService;
-    private final DiscountService discountService;
     private final ModelMapper modelMapper;
 
     public PassengerController(PassengerService passengerService,
-            BookingService bookingService, FlightService flightService,
-            DiscountService discountService, ModelMapper modelMapper) {
+            ModelMapper modelMapper) {
         this.passengerService = passengerService;
-        this.bookingService = bookingService;
-        this.flightService = flightService;
-        this.discountService = discountService;
         this.modelMapper = modelMapper;
         this.modelMapper.addMappings(new PassengerMap());
         this.modelMapper.addMappings(new PassengerDtoMap());
         this.modelMapper.addMappings(new CreatingPassengerDtoMap());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<Page<PassengerDto>> findAll(
             @RequestParam("index") Integer pageIndex,
@@ -71,6 +59,7 @@ public class PassengerController {
         return ResponseEntity.ok(passengerDtos);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("{id}")
     public ResponseEntity<PassengerDto> findById(@PathVariable Long id) {
         final Passenger passenger = passengerService.findById(id);
@@ -78,6 +67,7 @@ public class PassengerController {
         return ResponseEntity.ok(passengerDto);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("search")
     public ResponseEntity<Page<PassengerDto>> findByConfirmationCodeOrUsernameContaining(
             @RequestParam("term") String searchTerm,
@@ -91,6 +81,7 @@ public class PassengerController {
         return ResponseEntity.ok(passengerDtosPage);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("distinct_search")
     public ResponseEntity<Page<PassengerDto>> findDistinctByConfirmationCodeOrUsernameContaining(
             @RequestParam("term") String searchTerm,
@@ -104,11 +95,12 @@ public class PassengerController {
         return ResponseEntity.ok(passengerDtos);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @PostMapping
     public ResponseEntity<PassengerDto> create(
             @Valid @RequestBody PassengerCreationDto passengerCreationDto,
             UriComponentsBuilder builder) {
-        Passenger creatingPassenger = modelMapper.map(passengerCreationDto,
+        Passenger passengerToCreate = modelMapper.map(passengerCreationDto,
                 Passenger.class);
 
         String originAirportCode = passengerCreationDto.getOriginAirportCode();
@@ -117,40 +109,12 @@ public class PassengerController {
         String airplaneModel = passengerCreationDto.getAirplaneModel();
         LocalDateTime departureTime = passengerCreationDto.getDepartureTime();
         LocalDateTime arrivalTime = passengerCreationDto.getArrivalTime();
-        Flight flight = flightService.identifyFlight(originAirportCode,
-                destinationAirportCode, airplaneModel, departureTime,
-                arrivalTime);
-        creatingPassenger.setFlight(flight);
+        String seatClass = passengerCreationDto.getSeatClass();
+        LocalDate dateOfBirth = passengerCreationDto.getDateOfBirth();
 
-        Double basePrice = 0d;
-        if (passengerCreationDto.getSeatClass() == "first") {
-            basePrice = flight.getFirstClassPrice();
-        } else if (passengerCreationDto.getSeatClass() == "business") {
-            basePrice = flight.getBusinessClassPrice();
-        } else if (passengerCreationDto.getSeatClass() == "economy") {
-            basePrice = flight.getEconomyClassPrice();
-        }
-        Integer age = Period
-                .between(passengerCreationDto.getDateOfBirth(), LocalDate.now())
-                .getYears();
-        Discount discount;
-        if (age <= 2) {
-            discount = discountService.findByDiscountType("child");
-        } else if (age >= 65) {
-            discount = discountService.findByDiscountType("elderly");
-        } else {
-            discount = discountService.findByDiscountType("none");
-        }
-        creatingPassenger.setDiscount(discount);
-        Double discountRate = discount.getDiscountRate();
-        Booking booking = bookingService.findByConfirmationCode(
-                creatingPassenger.getBooking().getConfirmationCode());
-        Integer layoverCount = booking.getLayoverCount();
-        booking.setTotalPrice(booking.getTotalPrice()
-                + calculateTotalPrice(basePrice, discountRate, layoverCount));
-        creatingPassenger.setBooking(booking);
-
-        Passenger createdPassenger = passengerService.create(creatingPassenger);
+        Passenger createdPassenger = passengerService.create(passengerToCreate,
+                originAirportCode, destinationAirportCode, airplaneModel,
+                departureTime, arrivalTime, seatClass, dateOfBirth);
         PassengerDto createdPassengerDto = modelMapper.map(createdPassenger,
                 PassengerDto.class);
         return ResponseEntity
@@ -159,14 +123,7 @@ public class PassengerController {
                 .body(createdPassengerDto);
     }
 
-    private Double calculateTotalPrice(Double basePrice, Double discountRate,
-            Integer layoverCount) {
-        if (layoverCount > 0) {
-            discountRate += LAYOVER_DISCOUNT_RATE;
-        }
-        return basePrice * discountRate;
-    }
-
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @PutMapping("{id}")
     public ResponseEntity<PassengerDto> update(@PathVariable Long id,
             @Valid @RequestBody PassengerDto passengerDto,
@@ -178,6 +135,7 @@ public class PassengerController {
         return ResponseEntity.ok(convertPassengerToDto(updatedPassenger));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @DeleteMapping("{id}")
     public ResponseEntity<Void> deleteById(@PathVariable Long id) {
         passengerService.deleteById(id);
