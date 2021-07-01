@@ -6,8 +6,8 @@ intent.
 
 ## Table of Contents
 
-- ### [Installation](#installation)
-- ### [Usage](#usage)
+- [Installation](#installation)
+- [Usage](#usage)
 
 ## Installation
 
@@ -31,23 +31,133 @@ intent.
 
 ### Endpoints:
 
-- ### [GET /bookings](#get-bookings)
+- [GET /bookings](#get-bookings)
+
   Find all bookings.
-- ### [POST /bookings](#post-bookings)
+- [POST /bookings](#post-bookings)
+
   Create a booking.
-- ### [PUT /bookings{id}](#put-bookings)
+- [PUT /bookings{id}](#put-bookings)
+
   Update a booking.
-- ### [DELETE /bookings{id}](#delete-bookings)
+- [DELETE /bookings{id}](#delete-bookings)
+
   Delete a booking.
-- ### [GET /passengers](#get-passengers)
-- ### [POST /passengers](#post-passengers)
-- ### [PUT /passengers{id}](#put-passengers)
-- ### [DELETE /passengers{id}](#delete-passengers)
-- ### [GET /payments/{stripe_id}](#get-payments-stripe-id)
+- [GET /passengers](#get-passengers)
+- [POST /passengers](#post-passengers)
+- [PUT /passengers{id}](#put-passengers)
+- [DELETE /passengers{id}](#delete-passengers)
+- [GET /payments/{stripe_id}](#get-payments-stripe-id)
 
 ## GET /bookings
 
 Under construction.
+
+### Parameters:
+
+confirmation_code (string)
+
+### Response:
+
+```
+{
+  "id": 0,
+  "active": true,
+  "confirmationCode": "string",
+  "layoverCount": 0,
+  "totalPrice": 0,
+  "username": "string",
+  "email": "string",
+  "phone": "string",
+  "flights": [
+    {
+      "id": 0,
+      "active": true,
+      "departureTime": "2021-07-01T00:01:32.787Z",
+      "arrivalTime": "2021-07-01T00:01:32.787Z",
+      "routeId": 0,
+      "routeActive": true,
+      "originAirportCode": "string",
+      "originAirportCity": "string",
+      "originAirportActive": true,
+      "destinationAirportCode": "string",
+      "destinationAirportCity": "string",
+      "destinationAirportActive": true,
+      "airplaneModel": "string",
+      "passengers": [
+        {
+          "id": 0,
+          "bookingId": 0,
+          "bookingActive": true,
+          "bookingConfirmationCode": "string",
+          "layoverCount": 0,
+          "bookingTotalPrice": 0,
+          "flightId": 0,
+          "flightActive": true,
+          "departureTime": "2021-07-01T00:01:32.787Z",
+          "arrivalTime": "2021-07-01T00:01:32.787Z",
+          "routeId": 0,
+          "routeActive": true,
+          "originAirportCode": "string",
+          "originAirportActive": true,
+          "originAirportCity": "string",
+          "destinationAirportCode": "string",
+          "destinationAirportActive": true,
+          "destinationAirportCity": "string",
+          "discountType": "string",
+          "discountRate": 0,
+          "givenName": "string",
+          "familyName": "string",
+          "dateOfBirth": "2021-07-01",
+          "gender": "string",
+          "address": "string",
+          "seatClass": "string",
+          "seatNumber": 0,
+          "checkInGroup": 0,
+          "username": "string",
+          "email": "string",
+          "phone": "string"
+        }
+      ]
+    }
+  ],
+  "passengers": [
+    {
+      "id": 0,
+      "bookingId": 0,
+      "bookingActive": true,
+      "bookingConfirmationCode": "string",
+      "layoverCount": 0,
+      "bookingTotalPrice": 0,
+      "flightId": 0,
+      "flightActive": true,
+      "departureTime": "2021-07-01T00:01:32.787Z",
+      "arrivalTime": "2021-07-01T00:01:32.787Z",
+      "routeId": 0,
+      "routeActive": true,
+      "originAirportCode": "string",
+      "originAirportActive": true,
+      "originAirportCity": "string",
+      "destinationAirportCode": "string",
+      "destinationAirportActive": true,
+      "destinationAirportCity": "string",
+      "discountType": "string",
+      "discountRate": 0,
+      "givenName": "string",
+      "familyName": "string",
+      "dateOfBirth": "2021-07-01",
+      "gender": "string",
+      "address": "string",
+      "seatClass": "string",
+      "seatNumber": 0,
+      "checkInGroup": 0,
+      "username": "string",
+      "email": "string",
+      "phone": "string"
+    }
+  ]
+}
+```
 
 ## POST /bookings
 
@@ -165,6 +275,8 @@ Under construction.
 
 ## PUT /bookings/{id}
 
+Under construction.
+
 ### Parameters:
 
 id (integer)
@@ -183,6 +295,10 @@ id (integer)
 ### Responses:
 
 ## DELETE /bookings/{id}
+
+### Parameters:
+
+id (integer)
 
 ## GET /passengers
 
@@ -326,7 +442,83 @@ size (integer)
 
 id (integer)
 
+### Request body:
+
+```
+{
+  "id": 0,
+  "givenName": "string",
+  "familyName": "string",
+  "dateOfBirth": "2021-07-01",
+  "gender": "string",
+  "address": "string",
+  "seatClass": "string",
+  "seatNumber": 0,
+  "checkInGroup": 0
+}
+```
+
+### Response:
+
+```
+{
+  "id": 0,
+  "bookingId": 0,
+  "bookingActive": true,
+  "bookingConfirmationCode": "string",
+  "layoverCount": 0,
+  "bookingTotalPrice": 0,
+  "flightId": 0,
+  "flightActive": true,
+  "departureTime": "2021-07-01T00:10:29.693Z",
+  "arrivalTime": "2021-07-01T00:10:29.693Z",
+  "routeId": 0,
+  "routeActive": true,
+  "originAirportCode": "string",
+  "originAirportActive": true,
+  "originAirportCity": "string",
+  "destinationAirportCode": "string",
+  "destinationAirportActive": true,
+  "destinationAirportCity": "string",
+  "discountType": "string",
+  "discountRate": 0,
+  "givenName": "string",
+  "familyName": "string",
+  "dateOfBirth": "2021-07-01",
+  "gender": "string",
+  "address": "string",
+  "seatClass": "string",
+  "seatNumber": 0,
+  "checkInGroup": 0,
+  "username": "string",
+  "email": "string",
+  "phone": "string"
+}
+```
+
 ## DELETE /passengers/{id}
+
+### Parameters:
+
+id (integer)
+
+## GET /payments/{stripe_id}
+
+Under construction.
+
+## POST /payments
+
+Under construction.
+
+## DELETE /payments/{stripe_id}
+
+### Parameters:
+
+stripe_id (string)
+
+## POST /payments/payment-intent
+
+Under construction.
 
 ## Required environment variables
 
