@@ -34,130 +34,32 @@ intent.
 - [GET /bookings](#get-bookings)
 
   Find all bookings.
+
 - [POST /bookings](#post-bookings)
 
   Create a booking.
+
 - [PUT /bookings{id}](#put-bookings)
 
   Update a booking.
+
 - [DELETE /bookings{id}](#delete-bookings)
 
   Delete a booking.
+
 - [GET /passengers](#get-passengers)
+
 - [POST /passengers](#post-passengers)
-- [PUT /passengers{id}](#put-passengers)
-- [DELETE /passengers{id}](#delete-passengers)
-- [GET /payments/{stripe_id}](#get-payments-stripe-id)
+
+- [PUT /passengers{id}](#put-passengersid)
+
+- [DELETE /passengers{id}](#delete-passengersid)
+
+- [GET /payments/{stripe_id}](#get-paymentsstripe_id)
 
 ## GET /bookings
 
 Under construction.
-
-### Parameters:
-
-confirmation_code (string)
-
-### Response:
-
-```
-{
-  "id": 0,
-  "active": true,
-  "confirmationCode": "string",
-  "layoverCount": 0,
-  "totalPrice": 0,
-  "username": "string",
-  "email": "string",
-  "phone": "string",
-  "flights": [
-    {
-      "id": 0,
-      "active": true,
-      "departureTime": "2021-07-01T00:01:32.787Z",
-      "arrivalTime": "2021-07-01T00:01:32.787Z",
-      "routeId": 0,
-      "routeActive": true,
-      "originAirportCode": "string",
-      "originAirportCity": "string",
-      "originAirportActive": true,
-      "destinationAirportCode": "string",
-      "destinationAirportCity": "string",
-      "destinationAirportActive": true,
-      "airplaneModel": "string",
-      "passengers": [
-        {
-          "id": 0,
-          "bookingId": 0,
-          "bookingActive": true,
-          "bookingConfirmationCode": "string",
-          "layoverCount": 0,
-          "bookingTotalPrice": 0,
-          "flightId": 0,
-          "flightActive": true,
-          "departureTime": "2021-07-01T00:01:32.787Z",
-          "arrivalTime": "2021-07-01T00:01:32.787Z",
-          "routeId": 0,
-          "routeActive": true,
-          "originAirportCode": "string",
-          "originAirportActive": true,
-          "originAirportCity": "string",
-          "destinationAirportCode": "string",
-          "destinationAirportActive": true,
-          "destinationAirportCity": "string",
-          "discountType": "string",
-          "discountRate": 0,
-          "givenName": "string",
-          "familyName": "string",
-          "dateOfBirth": "2021-07-01",
-          "gender": "string",
-          "address": "string",
-          "seatClass": "string",
-          "seatNumber": 0,
-          "checkInGroup": 0,
-          "username": "string",
-          "email": "string",
-          "phone": "string"
-        }
-      ]
-    }
-  ],
-  "passengers": [
-    {
-      "id": 0,
-      "bookingId": 0,
-      "bookingActive": true,
-      "bookingConfirmationCode": "string",
-      "layoverCount": 0,
-      "bookingTotalPrice": 0,
-      "flightId": 0,
-      "flightActive": true,
-      "departureTime": "2021-07-01T00:01:32.787Z",
-      "arrivalTime": "2021-07-01T00:01:32.787Z",
-      "routeId": 0,
-      "routeActive": true,
-      "originAirportCode": "string",
-      "originAirportActive": true,
-      "originAirportCity": "string",
-      "destinationAirportCode": "string",
-      "destinationAirportActive": true,
-      "destinationAirportCity": "string",
-      "discountType": "string",
-      "discountRate": 0,
-      "givenName": "string",
-      "familyName": "string",
-      "dateOfBirth": "2021-07-01",
-      "gender": "string",
-      "address": "string",
-      "seatClass": "string",
-      "seatNumber": 0,
-      "checkInGroup": 0,
-      "username": "string",
-      "email": "string",
-      "phone": "string"
-    }
-  ]
-}
-```
 
 ## POST /bookings
 
@@ -504,7 +406,19 @@ id (integer)
 
 ## GET /payments/{stripe_id}
 
-Under construction.
+### Parameters:
+
+stripe_id (string)
+
+### Response:
+
+```
+{
+  "bookingId": 0,
+  "stripeId": "string",
+  "refunded": true
+}
+```
 
 ## POST /payments
 
