@@ -33,7 +33,7 @@ intent.
 
 - [GET /bookings](#get-bookings)
 
-  Find all bookings.
+  Get a page of bookings.
 
 - [POST /bookings](#post-bookings)
 
@@ -49,13 +49,35 @@ intent.
 
 - [GET /passengers](#get-passengers)
 
+  Get a page of passengers.
+
 - [POST /passengers](#post-passengers)
+
+  Create a passenger.
 
 - [PUT /passengers{id}](#put-passengersid)
 
+  Update a passenger.
+
 - [DELETE /passengers{id}](#delete-passengersid)
 
+  Delete a passenger.
+
 - [GET /payments/{stripe_id}](#get-paymentsstripe_id)
+
+  Get a payment by its Stripe ID.
+
+- [POST /payments/](#post-payments)
+
+  Create a payment.
+
+- [DELETE /payments/{stripe_id}](#delete-paymentsstripe_id)
+
+  Delete a payment.
+
+- [POST /payments/payment-intent](#post-paymentspayment-intent)
+
+  Create a payment intent.
 
 ## GET /bookings
 
@@ -176,8 +198,6 @@ Under construction.
 ```
 
 ## PUT /bookings/{id}
-
-Under construction.
 
 ### Parameters:
 
@@ -422,7 +442,25 @@ stripe_id (string)
 
 ## POST /payments
 
-Under construction.
+### Request body:
+
+```
+{
+  "bookingId": 0,
+  "stripeId": "string",
+  "refunded": true
+}
+```
+
+### Response:
+
+```
+{
+  "bookingId": 0,
+  "stripeId": "string",
+  "refunded": true
+}
+```
 
 ## DELETE /payments/{stripe_id}
 
@@ -432,7 +470,22 @@ stripe_id (string)
 
 ## POST /payments/payment-intent
 
-Under construction.
+### Request body:
+
+```
+{
+  "amount": 0,
+  "currency": "string"
+}
+```
+
+### Response:
+
+```
+{
+    "clientSecret": "string"
+}
+```
 
 ## Required environment variables
 
