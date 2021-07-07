@@ -1,23 +1,19 @@
 package com.utopia.bookingservice.controller;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import javax.validation.Valid;
 
 import com.utopia.bookingservice.dto.BookingCreationDto;
-import com.utopia.bookingservice.dto.BookingDto;
+import com.utopia.bookingservice.dto.BookingResponseDto;
 import com.utopia.bookingservice.dto.BookingUpdateDto;
 import com.utopia.bookingservice.entity.Booking;
 import com.utopia.bookingservice.exception.ModelMapperFailedException;
 import com.utopia.bookingservice.propertymap.BookingCreationDtoMap;
+import com.utopia.bookingservice.propertymap.BookingMap;
 import com.utopia.bookingservice.propertymap.FlightMap;
 import com.utopia.bookingservice.security.JwtUtils;
 import com.utopia.bookingservice.service.BookingService;
-import com.utopia.bookingservice.util.DtoConverter;
 
 import org.modelmapper.ModelMapper;
-import org.modelmapper.PropertyMap;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -53,33 +49,17 @@ public class BookingController {
 
     private final BookingService bookingService;
     private final ModelMapper modelMapper;
-    private final DtoConverter dtoConverter;
 
     @Value("${jwt.secret-key}")
     private String jwtSecretKey;
 
     public BookingController(BookingService bookingService,
-            ModelMapper modelMapper, DtoConverter dtoConverter) {
+            ModelMapper modelMapper) {
         this.bookingService = bookingService;
-        this.dtoConverter = dtoConverter;
         this.modelMapper = modelMapper;
-        this.modelMapper.addMappings(new PropertyMap<Booking, BookingDto>() {
-            @Override
-            protected void configure() {
-                map().setUsername(source.getUser().getUsername());
-                map().setEmail(source.getUser().getEmail());
-                map().setPhone(source.getUser().getPhone());
-            }
-        });
+        this.modelMapper.addMappings(new BookingMap());
         this.modelMapper.addMappings(new BookingCreationDtoMap());
         this.modelMapper.addMappings(new FlightMap());
-        this.modelMapper
-                .addMappings(new PropertyMap<BookingUpdateDto, Booking>() {
-                    @Override
-                    protected void configure() {
-                        map().getUser().setUsername(source.getUsername());
-                    }
-                });
     }
 
     @GetMapping("/")
@@ -89,48 +69,52 @@ public class BookingController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("bookings")
-    public ResponseEntity<List<BookingDto>> findAllBookings() {
-        List<Booking> bookings = bookingService.findAllBookings();
-        List<BookingDto> bookingDtos = bookings.stream()
-                .map(dtoConverter::convertBookingToDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(bookingDtos);
+    public ResponseEntity<Page<BookingResponseDto>> findAll(
+            @RequestParam("index") Integer pageIndex,
+            @RequestParam("size") Integer pageSize) {
+        final Page<Booking> bookingsPage = bookingService.findAll(pageIndex,
+                pageSize);
+        final Page<BookingResponseDto> bookingDtosPage = bookingsPage
+                .map(this::convertToGetDto);
+        return ResponseEntity.ok(bookingDtosPage);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("bookings/{confirmation_code}")
-    public ResponseEntity<BookingDto> findByConfirmationCode(
+    public ResponseEntity<BookingResponseDto> findByConfirmationCode(
             @PathVariable("confirmation_code") String confirmationCode) {
         final Booking booking = bookingService
                 .findByConfirmationCode(confirmationCode);
-        final BookingDto bookingDto = this.convertToDto(booking);
+        final BookingResponseDto bookingDto = this.convertToGetDto(booking);
         return ResponseEntity.ok(bookingDto);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("bookings/search")
-    public ResponseEntity<List<BookingDto>> findBookingsByModelContaining(
-            @RequestParam("confirmation_code") String confirmationCode) {
-        List<Booking> bookings = bookingService
-                .findByConfirmationCodeContaining(confirmationCode);
-        List<BookingDto> bookingDtos = bookings.stream().map(this::convertToDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(bookingDtos);
+    public ResponseEntity<Page<BookingResponseDto>> findBookingsByConfirmationCodeContaining(
+            @RequestParam("confirmation_code") String confirmationCode,
+            @RequestParam("index") Integer pageIndex,
+            @RequestParam("size") Integer pageSize) {
+        Page<Booking> bookingsPage = bookingService
+                .findByConfirmationCodeContaining(confirmationCode, pageIndex,
+                        pageSize);
+        Page<BookingResponseDto> bookingDtosPage = bookingsPage
+                .map(this::convertToGetDto);
+        return ResponseEntity.ok(bookingDtosPage);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @GetMapping("bookings/username/{username}")
-    public ResponseEntity<Page<BookingDto>> findByUsername(
+    public ResponseEntity<Page<BookingResponseDto>> findByUsername(
             @PathVariable("username") String username,
             @RequestParam("index") Integer pageIndex,
             @RequestParam("size") Integer pageSize,
-            @RequestHeader("authorization") String bearerToken) {
+            @RequestHeader("Authorization") String bearerToken) {
         checkUsernameRequestMatchesResponse(bearerToken, username);
         Page<Booking> bookingsPage = bookingService.findByUsername(username,
                 pageIndex, pageSize);
-        Page<BookingDto> bookingDtosPage = bookingsPage
-                .map((Booking booking) -> modelMapper.map(booking,
-                        BookingDto.class));
+        Page<BookingResponseDto> bookingDtosPage = bookingsPage
+                .map(this::convertToGetDto);
         return ResponseEntity.ok(bookingDtosPage);
     }
 
@@ -151,15 +135,15 @@ public class BookingController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @PostMapping("bookings")
-    public ResponseEntity<BookingDto> create(
+    public ResponseEntity<BookingResponseDto> create(
             @Valid @RequestBody BookingCreationDto bookingCreationDto,
             UriComponentsBuilder builder) {
         Booking bookingToCreate = modelMapper.map(bookingCreationDto,
                 Booking.class);
 
-        Booking createdBooking = bookingService.create(bookingToCreate,
-                bookingCreationDto.getUsername());
-        BookingDto createdBookingDto = convertToDto(createdBooking);
+        Booking createdBooking = bookingService
+                .create(bookingCreationDto.getUsername(), bookingToCreate);
+        BookingResponseDto createdBookingDto = convertToGetDto(createdBooking);
         return ResponseEntity
                 .created(builder.path("/bookings/{id}")
                         .build(createdBookingDto.getId()))
@@ -168,31 +152,25 @@ public class BookingController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("bookings/{id}")
-    public ResponseEntity<BookingDto> update(@PathVariable Long id,
+    public ResponseEntity<BookingResponseDto> update(@PathVariable Long id,
             @Valid @RequestBody BookingUpdateDto bookingUpdateDto)
             throws ModelMapperFailedException {
         Booking targetBooking;
         targetBooking = modelMapper.map(bookingUpdateDto, Booking.class);
-        String username = bookingUpdateDto.getUsername();
-        Booking updatedBooking = bookingService.update(id, username,
-                targetBooking);
-        BookingDto updatedBookingDto = convertToDto(updatedBooking);
+        Booking updatedBooking = bookingService.update(id, targetBooking);
+        BookingResponseDto updatedBookingDto = convertToGetDto(updatedBooking);
         return ResponseEntity.ok(updatedBookingDto);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @DeleteMapping("bookings/{id}")
-    public ResponseEntity<String> deleteBooking(@PathVariable Long id)
+    public ResponseEntity<Void> deleteBooking(@PathVariable Long id)
             throws ModelMapperFailedException {
-        bookingService.deleteBookingById(id);
+        bookingService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
-    private BookingDto convertToDto(Booking booking) {
-        return modelMapper.map(booking, BookingDto.class);
-    }
-
-    private Booking convertToEntity(BookingDto bookingDto) {
-        return modelMapper.map(bookingDto, Booking.class);
+    private BookingResponseDto convertToGetDto(Booking booking) {
+        return modelMapper.map(booking, BookingResponseDto.class);
     }
 }

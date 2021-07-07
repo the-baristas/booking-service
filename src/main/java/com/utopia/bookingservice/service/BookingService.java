@@ -22,8 +22,9 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
 
-    public List<Booking> findAllBookings() {
-        return bookingRepository.findAll();
+    public Page<Booking> findAll(Integer pageIndex, Integer pageSize) {
+        Pageable pageable = PageRequest.of(pageIndex, pageSize);
+        return bookingRepository.findAll(pageable);
     }
 
     public Booking findByConfirmationCode(String confirmationCode) {
@@ -34,10 +35,11 @@ public class BookingService {
                                 + confirmationCode));
     }
 
-    public List<Booking> findByConfirmationCodeContaining(
-            String confirmationCode) {
+    public Page<Booking> findByConfirmationCodeContaining(
+            String confirmationCode, Integer pageIndex, Integer pageSize) {
+        Pageable pageable = PageRequest.of(pageIndex, pageSize);
         return bookingRepository
-                .findByConfirmationCodeContaining(confirmationCode);
+                .findByConfirmationCodeContaining(confirmationCode, pageable);
     }
 
     public Page<Booking> findByUsername(String username, Integer pageIndex,
@@ -51,7 +53,7 @@ public class BookingService {
         }
     }
 
-    public Booking create(Booking bookingToCreate, String username) {
+    public Booking create(String username, Booking bookingToCreate) {
         User user = userRepository.findByUsername(username).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "User not found with username: " + username));
@@ -68,15 +70,11 @@ public class BookingService {
         }
     }
 
-    public Booking update(Long id, String username, Booking targetBooking) {
+    public Booking update(Long id, Booking targetBooking) {
         bookingRepository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Could not find booking with id: " + id));
         targetBooking.setId(id);
-        User user = userRepository.findByUsername(username).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "User not found with username: " + username));
-        targetBooking.setUser(user);
         try {
             return bookingRepository.save(targetBooking);
         } catch (IllegalArgumentException e) {
@@ -87,7 +85,7 @@ public class BookingService {
         }
     }
 
-    public void deleteBookingById(Long id) throws ResponseStatusException {
+    public void deleteById(Long id) throws ResponseStatusException {
         bookingRepository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Could not find booking with id = " + id));

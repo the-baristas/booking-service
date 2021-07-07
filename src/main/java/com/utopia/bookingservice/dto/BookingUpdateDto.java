@@ -19,7 +19,4 @@ public class BookingUpdateDto {
 
     @PositiveOrZero
     private Double totalPrice;
-
-    @NotBlank
-    private String username;
 }

@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PassengerDto {
+public class PassengerResponseDto {
     private Long id;
 
     @Positive
