@@ -5,7 +5,7 @@ import com.utopia.bookingservice.entity.Passenger;
 
 import org.modelmapper.PropertyMap;
 
-public class CreatingPassengerDtoMap
+public class PassengerCreationDtoMap
         extends PropertyMap<PassengerCreationDto, Passenger> {
     @Override
     protected void configure() {

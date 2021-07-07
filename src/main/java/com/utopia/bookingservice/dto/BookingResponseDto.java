@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class,
         property = "id")
-public class BookingDto {
+public class BookingResponseDto {
     @Positive
     private Long id;
 
@@ -49,5 +49,5 @@ public class BookingDto {
     private List<FlightDto> flights;
 
     @NotNull
-    private List<PassengerDto> passengers;
+    private List<PassengerResponseDto> passengers;
 }

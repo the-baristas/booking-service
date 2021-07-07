@@ -29,27 +29,35 @@ intent.
 
 ## Usage
 
-### Endpoints:
+### Endpoints
 
 - [GET /bookings](#get-bookings)
 
   Get a page of bookings.
 
+- [GET /bookings/search](#bookingssearch)
+
+  Get a page of bookings with a confirmation code that contains the search term.
+
 - [POST /bookings](#post-bookings)
 
   Create a booking.
 
-- [PUT /bookings{id}](#put-bookings)
+- [PUT /bookings{id}](#put-bookingsid)
 
   Update a booking.
 
-- [DELETE /bookings{id}](#delete-bookings)
+- [DELETE /bookings{id}](#delete-bookingsid)
 
   Delete a booking.
 
 - [GET /passengers](#get-passengers)
 
   Get a page of passengers.
+
+- [GET /passengers/{id}](#get-passengersid)
+
+  Get a passenger by its ID.
 
 - [POST /passengers](#post-passengers)
 
@@ -81,7 +89,283 @@ intent.
 
 ## GET /bookings
 
-Under construction.
+### Parameters:
+
+index (integer)
+
+size (integer)
+
+### Response:
+
+```
+{
+  "totalElements": 0,
+  "totalPages": 0,
+  "size": 0,
+  "content": [
+    {
+      "id": 0,
+      "active": true,
+      "confirmationCode": "string",
+      "layoverCount": 0,
+      "totalPrice": 0,
+      "username": "string",
+      "email": "string",
+      "phone": "string",
+      "flights": [
+        {
+          "id": 0,
+          "active": true,
+          "departureTime": "2021-07-03T02:15:58.982Z",
+          "arrivalTime": "2021-07-03T02:15:58.982Z",
+          "routeId": 0,
+          "routeActive": true,
+          "originAirportCode": "string",
+          "originAirportCity": "string",
+          "originAirportActive": true,
+          "destinationAirportCode": "string",
+          "destinationAirportCity": "string",
+          "destinationAirportActive": true,
+          "airplaneModel": "string",
+          "passengers": [
+            {
+              "id": 0,
+              "bookingId": 0,
+              "bookingActive": true,
+              "bookingConfirmationCode": "string",
+              "layoverCount": 0,
+              "bookingTotalPrice": 0,
+              "flightId": 0,
+              "flightActive": true,
+              "departureTime": "2021-07-03T02:15:58.982Z",
+              "arrivalTime": "2021-07-03T02:15:58.982Z",
+              "routeId": 0,
+              "routeActive": true,
+              "originAirportCode": "string",
+              "originAirportActive": true,
+              "originAirportCity": "string",
+              "destinationAirportCode": "string",
+              "destinationAirportActive": true,
+              "destinationAirportCity": "string",
+              "discountType": "string",
+              "discountRate": 0,
+              "givenName": "string",
+              "familyName": "string",
+              "dateOfBirth": "2021-07-03",
+              "gender": "string",
+              "address": "string",
+              "seatClass": "string",
+              "seatNumber": 0,
+              "checkInGroup": 0,
+              "username": "string",
+              "email": "string",
+              "phone": "string"
+            }
+          ]
+        }
+      ],
+      "passengers": [
+        {
+          "id": 0,
+          "bookingId": 0,
+          "bookingActive": true,
+          "bookingConfirmationCode": "string",
+          "layoverCount": 0,
+          "bookingTotalPrice": 0,
+          "flightId": 0,
+          "flightActive": true,
+          "departureTime": "2021-07-03T02:15:58.982Z",
+          "arrivalTime": "2021-07-03T02:15:58.982Z",
+          "routeId": 0,
+          "routeActive": true,
+          "originAirportCode": "string",
+          "originAirportActive": true,
+          "originAirportCity": "string",
+          "destinationAirportCode": "string",
+          "destinationAirportActive": true,
+          "destinationAirportCity": "string",
+          "discountType": "string",
+          "discountRate": 0,
+          "givenName": "string",
+          "familyName": "string",
+          "dateOfBirth": "2021-07-03",
+          "gender": "string",
+          "address": "string",
+          "seatClass": "string",
+          "seatNumber": 0,
+          "checkInGroup": 0,
+          "username": "string",
+          "email": "string",
+          "phone": "string"
+        }
+      ]
+    }
+  ],
+  "number": 0,
+  "sort": {
+    "sorted": true,
+    "unsorted": true,
+    "empty": true
+  },
+  "numberOfElements": 0,
+  "pageable": {
+    "offset": 0,
+    "sort": {
+      "sorted": true,
+      "unsorted": true,
+      "empty": true
+    },
+    "pageSize": 0,
+    "pageNumber": 0,
+    "paged": true,
+    "unpaged": true
+  },
+  "first": true,
+  "last": true,
+  "empty": true
+}
+```
+
+## GET /bookings/search
+
+### Parameters:
+
+confirmation_code (string)
+
+index (integer)
+
+size (integer)
+
+### Response:
+
+```
+{
+  "totalElements": 0,
+  "totalPages": 0,
+  "size": 0,
+  "content": [
+    {
+      "id": 0,
+      "active": true,
+      "confirmationCode": "string",
+      "layoverCount": 0,
+      "totalPrice": 0,
+      "username": "string",
+      "email": "string",
+      "phone": "string",
+      "flights": [
+        {
+          "id": 0,
+          "active": true,
+          "departureTime": "2021-07-03T02:29:49.699Z",
+          "arrivalTime": "2021-07-03T02:29:49.699Z",
+          "routeId": 0,
+          "routeActive": true,
+          "originAirportCode": "string",
+          "originAirportCity": "string",
+          "originAirportActive": true,
+          "destinationAirportCode": "string",
+          "destinationAirportCity": "string",
+          "destinationAirportActive": true,
+          "airplaneModel": "string",
+          "passengers": [
+            {
+              "id": 0,
+              "bookingId": 0,
+              "bookingActive": true,
+              "bookingConfirmationCode": "string",
+              "layoverCount": 0,
+              "bookingTotalPrice": 0,
+              "flightId": 0,
+              "flightActive": true,
+              "departureTime": "2021-07-03T02:29:49.699Z",
+              "arrivalTime": "2021-07-03T02:29:49.699Z",
+              "routeId": 0,
+              "routeActive": true,
+              "originAirportCode": "string",
+              "originAirportActive": true,
+              "originAirportCity": "string",
+              "destinationAirportCode": "string",
+              "destinationAirportActive": true,
+              "destinationAirportCity": "string",
+              "discountType": "string",
+              "discountRate": 0,
+              "givenName": "string",
+              "familyName": "string",
+              "dateOfBirth": "2021-07-03",
+              "gender": "string",
+              "address": "string",
+              "seatClass": "string",
+              "seatNumber": 0,
+              "checkInGroup": 0,
+              "username": "string",
+              "email": "string",
+              "phone": "string"
+            }
+          ]
+        }
+      ],
+      "passengers": [
+        {
+          "id": 0,
+          "bookingId": 0,
+          "bookingActive": true,
+          "bookingConfirmationCode": "string",
+          "layoverCount": 0,
+          "bookingTotalPrice": 0,
+          "flightId": 0,
+          "flightActive": true,
+          "departureTime": "2021-07-03T02:29:49.699Z",
+          "arrivalTime": "2021-07-03T02:29:49.699Z",
+          "routeId": 0,
+          "routeActive": true,
+          "originAirportCode": "string",
+          "originAirportActive": true,
+          "originAirportCity": "string",
+          "destinationAirportCode": "string",
+          "destinationAirportActive": true,
+          "destinationAirportCity": "string",
+          "discountType": "string",
+          "discountRate": 0,
+          "givenName": "string",
+          "familyName": "string",
+          "dateOfBirth": "2021-07-03",
+          "gender": "string",
+          "address": "string",
+          "seatClass": "string",
+          "seatNumber": 0,
+          "checkInGroup": 0,
+          "username": "string",
+          "email": "string",
+          "phone": "string"
+        }
+      ]
+    }
+  ],
+  "number": 0,
+  "sort": {
+    "sorted": true,
+    "unsorted": true,
+    "empty": true
+  },
+  "numberOfElements": 0,
+  "pageable": {
+    "offset": 0,
+    "sort": {
+      "sorted": true,
+      "unsorted": true,
+      "empty": true
+    },
+    "pageSize": 0,
+    "pageNumber": 0,
+    "paged": true,
+    "unpaged": true
+  },
+  "first": true,
+  "last": true,
+  "empty": true
+}
+```
 
 ## POST /bookings
 
@@ -294,6 +578,50 @@ size (integer)
     "pageSize": 0
   },
   "empty": true
+}
+```
+
+## GET /passengers/{id}
+
+### Parameters:
+
+id (integer)
+
+### Response:
+
+```
+{
+  "id": 0,
+  "bookingId": 0,
+  "bookingActive": true,
+  "bookingConfirmationCode": "string",
+  "layoverCount": 0,
+  "bookingTotalPrice": 0,
+  "flightId": 0,
+  "flightActive": true,
+  "departureTime": "2021-07-07T08:14:59.164Z",
+  "arrivalTime": "2021-07-07T08:14:59.164Z",
+  "routeId": 0,
+  "routeActive": true,
+  "originAirportCode": "string",
+  "originAirportActive": true,
+  "originAirportCity": "string",
+  "destinationAirportCode": "string",
+  "destinationAirportActive": true,
+  "destinationAirportCity": "string",
+  "discountType": "string",
+  "discountRate": 0,
+  "givenName": "string",
+  "familyName": "string",
+  "dateOfBirth": "2021-07-07",
+  "gender": "string",
+  "address": "string",
+  "seatClass": "string",
+  "seatNumber": 0,
+  "checkInGroup": 0,
+  "username": "string",
+  "email": "string",
+  "phone": "string"
 }
 ```
 

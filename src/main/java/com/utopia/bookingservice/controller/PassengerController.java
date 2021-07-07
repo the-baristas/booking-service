@@ -6,10 +6,11 @@ import java.time.LocalDateTime;
 import javax.validation.Valid;
 
 import com.utopia.bookingservice.dto.PassengerCreationDto;
-import com.utopia.bookingservice.dto.PassengerDto;
+import com.utopia.bookingservice.dto.PassengerResponseDto;
+import com.utopia.bookingservice.dto.PassengerUpdateDto;
 import com.utopia.bookingservice.entity.Passenger;
-import com.utopia.bookingservice.propertymap.CreatingPassengerDtoMap;
-import com.utopia.bookingservice.propertymap.PassengerDtoMap;
+import com.utopia.bookingservice.propertymap.PassengerCreationDtoMap;
+import com.utopia.bookingservice.propertymap.PassengerGetDtoMap;
 import com.utopia.bookingservice.propertymap.PassengerMap;
 import com.utopia.bookingservice.service.PassengerService;
 
@@ -43,61 +44,63 @@ public class PassengerController {
         this.passengerService = passengerService;
         this.modelMapper = modelMapper;
         this.modelMapper.addMappings(new PassengerMap());
-        this.modelMapper.addMappings(new PassengerDtoMap());
-        this.modelMapper.addMappings(new CreatingPassengerDtoMap());
+        this.modelMapper.addMappings(new PassengerGetDtoMap());
+        this.modelMapper.addMappings(new PassengerCreationDtoMap());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<Page<PassengerDto>> findAll(
+    public ResponseEntity<Page<PassengerResponseDto>> findAll(
             @RequestParam("index") Integer pageIndex,
             @RequestParam("size") Integer pageSize) {
-        final Page<Passenger> passengers = passengerService.findAll(pageIndex,
-                pageSize);
-        final Page<PassengerDto> passengerDtos = passengers
-                .map(this::convertPassengerToDto);
-        return ResponseEntity.ok(passengerDtos);
+        final Page<Passenger> passengersPage = passengerService
+                .findAll(pageIndex, pageSize);
+        final Page<PassengerResponseDto> passengerDtosPage = passengersPage
+                .map(this::convertToGetDto);
+        return ResponseEntity.ok(passengerDtosPage);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("{id}")
-    public ResponseEntity<PassengerDto> findById(@PathVariable Long id) {
+    public ResponseEntity<PassengerResponseDto> findById(
+            @PathVariable Long id) {
         final Passenger passenger = passengerService.findById(id);
-        final PassengerDto passengerDto = this.convertPassengerToDto(passenger);
+        final PassengerResponseDto passengerDto = modelMapper.map(passenger,
+                PassengerResponseDto.class);
         return ResponseEntity.ok(passengerDto);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("search")
-    public ResponseEntity<Page<PassengerDto>> findByConfirmationCodeOrUsernameContaining(
+    public ResponseEntity<Page<PassengerResponseDto>> findByConfirmationCodeOrUsernameContaining(
             @RequestParam("term") String searchTerm,
             @RequestParam("index") Integer pageIndex,
             @RequestParam("size") Integer pageSize) {
         Page<Passenger> passengersPage = passengerService
                 .findByConfirmationCodeOrUsernameContaining(searchTerm,
                         pageIndex, pageSize);
-        Page<PassengerDto> passengerDtosPage = passengersPage
-                .map(this::convertPassengerToDto);
+        Page<PassengerResponseDto> passengerDtosPage = passengersPage
+                .map(this::convertToGetDto);
         return ResponseEntity.ok(passengerDtosPage);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("distinct_search")
-    public ResponseEntity<Page<PassengerDto>> findDistinctByConfirmationCodeOrUsernameContaining(
+    public ResponseEntity<Page<PassengerResponseDto>> findDistinctByConfirmationCodeOrUsernameContaining(
             @RequestParam("term") String searchTerm,
             @RequestParam("index") Integer pageIndex,
             @RequestParam("size") Integer pageSize) {
         Page<Passenger> passengers = passengerService
                 .findDistinctByConfirmationCodeOrUsernameContaining(searchTerm,
                         pageIndex, pageSize);
-        Page<PassengerDto> passengerDtos = passengers
-                .map(this::convertPassengerToDto);
+        Page<PassengerResponseDto> passengerDtos = passengers
+                .map(this::convertToGetDto);
         return ResponseEntity.ok(passengerDtos);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @PostMapping
-    public ResponseEntity<PassengerDto> create(
+    public ResponseEntity<PassengerResponseDto> create(
             @Valid @RequestBody PassengerCreationDto passengerCreationDto,
             UriComponentsBuilder builder) {
         Passenger passengerToCreate = modelMapper.map(passengerCreationDto,
@@ -115,8 +118,8 @@ public class PassengerController {
         Passenger createdPassenger = passengerService.create(passengerToCreate,
                 originAirportCode, destinationAirportCode, airplaneModel,
                 departureTime, arrivalTime, seatClass, dateOfBirth);
-        PassengerDto createdPassengerDto = modelMapper.map(createdPassenger,
-                PassengerDto.class);
+        PassengerResponseDto createdPassengerDto = modelMapper
+                .map(createdPassenger, PassengerResponseDto.class);
         return ResponseEntity
                 .created(builder.path("/passengers/{id}")
                         .build(createdPassengerDto.getId()))
@@ -125,14 +128,16 @@ public class PassengerController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @PutMapping("{id}")
-    public ResponseEntity<PassengerDto> update(@PathVariable Long id,
-            @Valid @RequestBody PassengerDto passengerDto,
+    public ResponseEntity<PassengerResponseDto> update(@PathVariable Long id,
+            @Valid @RequestBody PassengerUpdateDto passengerUpdateDto,
             UriComponentsBuilder builder) {
-        passengerDto.setId(id);
-        Passenger passenger;
-        passenger = convertDtoToPassenger(passengerDto);
-        Passenger updatedPassenger = passengerService.update(passenger);
-        return ResponseEntity.ok(convertPassengerToDto(updatedPassenger));
+        Passenger targetPassenger = modelMapper.map(passengerUpdateDto,
+                Passenger.class);
+        Passenger updatedPassenger = passengerService.update(id,
+                targetPassenger);
+        PassengerResponseDto updatedPassengerDto = convertToGetDto(
+                updatedPassenger);
+        return ResponseEntity.ok(updatedPassengerDto);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
@@ -142,11 +147,7 @@ public class PassengerController {
         return ResponseEntity.noContent().build();
     }
 
-    private PassengerDto convertPassengerToDto(Passenger passenger) {
-        return modelMapper.map(passenger, PassengerDto.class);
-    }
-
-    private Passenger convertDtoToPassenger(PassengerDto passengerDto) {
-        return modelMapper.map(passengerDto, Passenger.class);
+    private PassengerResponseDto convertToGetDto(Passenger passenger) {
+        return modelMapper.map(passenger, PassengerResponseDto.class);
     }
 }
