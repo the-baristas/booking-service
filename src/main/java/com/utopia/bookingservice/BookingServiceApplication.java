@@ -24,9 +24,9 @@ public class BookingServiceApplication {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**").allowedOrigins("*")
+                registry.addMapping("/**").allowedOriginPatterns("*")
                         .allowedMethods("*").allowedHeaders("*")
-                        .exposedHeaders("*");
+                        .exposedHeaders("Authorization").allowCredentials(true);
             }
         };
     }
