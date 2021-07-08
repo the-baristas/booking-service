@@ -26,6 +26,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PassengerService {
     private static final Double LAYOVER_DISCOUNT_RATE = 0.1;
+    private static final Integer CHILD_DISCOUNT_AGE = 2;
+    private static final Integer ELDERLY_DISCOUNT_AGE = 65;
 
     private final PassengerRepository passengerRepository;
     private final FlightRepository flightRepository;
@@ -43,6 +45,7 @@ public class PassengerService {
                         "Could not find passenger with id=" + id));
     }
 
+    // TODO: Extract code into methods.
     public Passenger create(Passenger passengerToCreate,
             String originAirportCode, String destinationAirportCode,
             String airplaneModel, LocalDateTime departureTime,
@@ -71,13 +74,14 @@ public class PassengerService {
                 basePrice = flight.getEconomyClassPrice();
                 break;
             default:
-                break;
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Invalid flight seat class: " + seatClass);
         }
         Integer age = Period.between(dateOfBirth, LocalDate.now()).getYears();
         String discountType;
-        if (age <= 2) {
+        if (age <= CHILD_DISCOUNT_AGE) {
             discountType = "child";
-        } else if (age >= 65) {
+        } else if (age >= ELDERLY_DISCOUNT_AGE) {
             discountType = "elderly";
         } else {
             discountType = "none";
@@ -99,7 +103,7 @@ public class PassengerService {
                                 + confirmationCode));
         Integer layoverCount = booking.getLayoverCount();
         Double totalPrice = booking.getTotalPrice()
-                + +calculateTotalPrice(basePrice, discountRate, layoverCount);
+                + calculateTotalPrice(basePrice, discountRate, layoverCount);
         booking.setTotalPrice(totalPrice);
         passengerToCreate.setBooking(booking);
         try {
@@ -120,12 +124,18 @@ public class PassengerService {
         return basePrice * discountRate;
     }
 
-    public Passenger update(Passenger passenger) {
-        passengerRepository.findById(passenger.getId()).orElseThrow(
+    public Passenger update(Long id, Passenger passenger) {
+        passengerRepository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Could not find passenger with id="
-                                + passenger.getId()));
-        return passengerRepository.save(passenger);
+                        "Could not find passenger with id=" + id));
+        try {
+            passenger.setId(id);
+            passengerRepository.save(passenger);
+            return passengerRepository.findById(id).get();
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Could not update passenger with id = " + id);
+        }
     }
 
     public void deleteById(Long id) {

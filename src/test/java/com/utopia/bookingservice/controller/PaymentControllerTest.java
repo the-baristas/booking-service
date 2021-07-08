@@ -2,9 +2,12 @@ package com.utopia.bookingservice.controller;
 
 import static org.mockito.Mockito.when;
 
+import java.util.Date;
 import java.util.HashMap;
 
-import com.stripe.exception.StripeException;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.stripe.model.PaymentIntent;
 import com.utopia.bookingservice.dto.PaymentDto;
 import com.utopia.bookingservice.dto.PaymentIntentInfoDto;
 import com.utopia.bookingservice.entity.Booking;
@@ -13,16 +16,20 @@ import com.utopia.bookingservice.service.PaymentService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
 
 @WebMvcTest(PaymentController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class PaymentControllerTest {
 
     private WebTestClient webTestClient;
@@ -33,8 +40,8 @@ public class PaymentControllerTest {
     @MockBean
     private PaymentService paymentService;
 
-    @InjectMocks
-    private PaymentController paymentController;
+    @Value("${jwt.secret-key")
+    private String jwtSecretKey;
 
     @BeforeEach
     public void setUp() {
@@ -42,26 +49,39 @@ public class PaymentControllerTest {
     }
 
     @Test
-    public void testCreatePaymentIntent() throws StripeException {
-        PaymentIntentInfoDto paymentInfo = new PaymentIntentInfoDto(9001, "usd");
+    @WithMockUser(roles = { "CUSTOMER" })
+    public void testCreatePaymentIntent() throws Exception {
+        PaymentIntentInfoDto paymentInfo = new PaymentIntentInfoDto(9001,
+                "usd");
         HashMap<String, Object> paymentInfoMap = new HashMap<String, Object>();
         paymentInfoMap.put("amount", paymentInfo.getAmount());
         paymentInfoMap.put("currency", paymentInfo.getCurrency());
-
-        when(paymentService.createPaymentIntent(paymentInfoMap)).thenReturn("clientSecretHushHush");
+        PaymentIntent paymentIntent = new PaymentIntent();
+        paymentIntent.setClientSecret("client_secret");
+        when(paymentService.createPaymentIntent(paymentInfoMap))
+                .thenReturn(paymentIntent);
+        String jwtToken = JWT.create().withSubject("username")
+                .withExpiresAt(new Date(System.currentTimeMillis() + 900_000))
+                .sign(Algorithm.HMAC512(jwtSecretKey.getBytes()));
 
         webTestClient.post().uri("/payments/payment-intent")
-                .contentType(MediaType.APPLICATION_JSON).bodyValue(paymentInfo)
-                .exchange().expectStatus().isOk().expectHeader()
-                .contentType(MediaType.APPLICATION_JSON)
-                .expectBody(String.class).isEqualTo("{\"clientSecret\":\"clientSecretHushHush\"}");
+                .headers((HttpHeaders headers) -> {
+                    headers.add("Authorization", jwtToken);
+                }).contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(paymentInfo).exchange().expectStatus().isCreated()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody(String.class)
+                .isEqualTo("{\"clientSecret\":\"client_secret\"}");
     }
 
-    @Test void testCreatePayment() {
+    @Test
+    @WithMockUser(roles = { "CUSTOMER" })
+    void testCreatePayment() {
         PaymentDto paymentDto = new PaymentDto(1L, "stripeid", false);
         Booking booking = new Booking();
         booking.setId(paymentDto.getBookingId());
-        Payment payment = new Payment(booking, paymentDto.getStripeId(), paymentDto.isRefunded());
+        Payment payment = new Payment(booking, paymentDto.getStripeId(),
+                paymentDto.isRefunded());
 
         when(paymentService.createPayment(payment)).thenReturn(payment);
 

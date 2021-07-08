@@ -61,10 +61,8 @@ public class PaymentService {
         }
     }
 
-    public String createPaymentIntent(Map<String, Object> paymentInfo)
+    public PaymentIntent createPaymentIntent(Map<String, Object> paymentInfo)
             throws StripeException, ResponseStatusException {
-        PaymentIntent intent = PaymentIntent.create(paymentInfo);
-
-        return intent.getClientSecret();
+        return PaymentIntent.create(paymentInfo);
     }
 }
