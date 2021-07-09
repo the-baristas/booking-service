@@ -29,7 +29,7 @@ intent.
 
 ## Usage
 
-### Endpoints:
+### Endpoints
 
 - [GET /bookings](#get-bookings)
 

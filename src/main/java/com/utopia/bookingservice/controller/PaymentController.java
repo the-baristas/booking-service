@@ -46,7 +46,7 @@ public class PaymentController {
         return ResponseEntity.ok(paymentDto);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
     @PostMapping("/payment-intent")
     public ResponseEntity<Map<String, String>> createPaymentIntent(
             @Valid @RequestBody PaymentIntentInfoDto paymentInfo,
@@ -77,7 +77,7 @@ public class PaymentController {
     }
 
     @DeleteMapping("{stripe_id}")
-    public ResponseEntity<Void> deletePayment(
+    public ResponseEntity<Void> deletePaymentByStripeId(
             @PathVariable("stripe_id") String stripeId) {
         paymentService.deleteByStripeId(stripeId);
         return ResponseEntity.noContent().build();

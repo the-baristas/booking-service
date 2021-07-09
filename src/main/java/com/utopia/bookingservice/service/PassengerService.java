@@ -26,8 +26,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PassengerService {
     private static final Double LAYOVER_DISCOUNT_RATE = 0.1;
-    private static final Integer CHILD_DISCOUNT_AGE = 2;
+    private static final Integer CHILD_DISCOUNT_AGE = 12;
     private static final Integer ELDERLY_DISCOUNT_AGE = 65;
+    private static final String FIRST_CLASS_VALUE = "first";
+    private static final String BUSINESS_CLASS_VALUE = "business";
+    private static final String ECONOMY_CLASS_VALUE = "economy";
 
     private final PassengerRepository passengerRepository;
     private final FlightRepository flightRepository;
@@ -60,17 +63,60 @@ public class PassengerService {
                                 + ", " + destinationAirportCode + ", "
                                 + airplaneModel + ", " + departureTime + ", "
                                 + arrivalTime));
+
+        // Check if there are any seats left for the seat class.
+        switch (seatClass) {
+            case FIRST_CLASS_VALUE: {
+                Integer reservedSeatsCount = flight
+                        .getReservedFirstClassSeatsCount();
+                if (reservedSeatsCount.equals(0)) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "There are 0 reserved first class seats.");
+                } else {
+                    flight.setReservedFirstClassSeatsCount(
+                            reservedSeatsCount - 1);
+                }
+                break;
+            }
+            case BUSINESS_CLASS_VALUE: {
+                Integer reservedSeatsCount = flight
+                        .getReservedBusinessClassSeatsCount();
+                if (reservedSeatsCount.equals(0)) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "There are 0 reserved business class seats.");
+                } else {
+                    flight.setReservedBusinessClassSeatsCount(
+                            reservedSeatsCount - 1);
+                }
+                break;
+            }
+            case ECONOMY_CLASS_VALUE: {
+                Integer reservedSeatsCount = flight
+                        .getReservedEconomyClassSeatsCount();
+                if (reservedSeatsCount.equals(0)) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "There are 0 reserved economy class seats.");
+                } else {
+                    flight.setReservedEconomyClassSeatsCount(
+                            reservedSeatsCount - 1);
+                }
+                break;
+            }
+            default:
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Invalid seat class: " + seatClass);
+        }
         passengerToCreate.setFlight(flight);
 
         Double basePrice = 0d;
         switch (seatClass) {
-            case "first":
+            case FIRST_CLASS_VALUE:
                 basePrice = flight.getFirstClassPrice();
                 break;
-            case "business":
+            case BUSINESS_CLASS_VALUE:
                 basePrice = flight.getBusinessClassPrice();
                 break;
-            case "economy":
+            case ECONOMY_CLASS_VALUE:
                 basePrice = flight.getEconomyClassPrice();
                 break;
             default:

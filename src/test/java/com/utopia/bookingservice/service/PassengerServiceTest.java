@@ -1,7 +1,9 @@
 package com.utopia.bookingservice.service;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,6 +36,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
 public class PassengerServiceTest {
@@ -139,7 +142,7 @@ public class PassengerServiceTest {
     }
 
     @Test
-    public void createPassenger_ValidPassenger_PassengerCreated()
+    public void create_PassengerInFirstClass_PassengerCreated()
             throws JsonMappingException, JsonProcessingException {
         String originAirportCode = "ABC";
         String destinationAirportCode = "BCD";
@@ -148,6 +151,7 @@ public class PassengerServiceTest {
         LocalDateTime arrivalTime = LocalDateTime.of(2022, 1, 1, 2, 0);
         Flight flight = new Flight();
         flight.setFirstClassPrice(1.01);
+        flight.setReservedFirstClassSeatsCount(1);
         Optional<Flight> flightOptional = Optional.of(flight);
         when(flightRepository.identifyFlight(originAirportCode,
                 destinationAirportCode, airplaneModel, departureTime,
@@ -188,6 +192,209 @@ public class PassengerServiceTest {
         assertThat(newPassenger, is(createdPassenger));
     }
 
+    @Test
+    public void create_ChildPassengerInBusinessClass_PassengerCreated()
+            throws JsonMappingException, JsonProcessingException {
+        String originAirportCode = "ABC";
+        String destinationAirportCode = "BCD";
+        String airplaneModel = "model";
+        LocalDateTime departureTime = LocalDateTime.of(2022, 1, 1, 1, 0);
+        LocalDateTime arrivalTime = LocalDateTime.of(2022, 1, 1, 2, 0);
+        Flight flight = new Flight();
+        flight.setBusinessClassPrice(1.01);
+        flight.setReservedBusinessClassSeatsCount(1);
+        Optional<Flight> flightOptional = Optional.of(flight);
+        when(flightRepository.identifyFlight(originAirportCode,
+                destinationAirportCode, airplaneModel, departureTime,
+                arrivalTime)).thenReturn(flightOptional);
+
+        Discount discount = new Discount();
+        discount.setDiscountRate(0.5d);
+        Optional<Discount> discountOptional = Optional.of(discount);
+        when(discountRepository.findByDiscountType("child"))
+                .thenReturn(discountOptional);
+
+        Passenger passengerToCreate = new Passenger();
+        Booking bookingToFind = new Booking();
+        String confirmationCode = "confirmation_code";
+        bookingToFind.setConfirmationCode(confirmationCode);
+        passengerToCreate.setBooking(bookingToFind);
+
+        Booking foundBooking = new Booking();
+        foundBooking.setLayoverCount(0);
+        foundBooking.setTotalPrice(0d);
+        Optional<Booking> bookingOptional = Optional.of(foundBooking);
+        when(bookingRepository.findByConfirmationCode(confirmationCode))
+                .thenReturn(bookingOptional);
+
+        // Clone passengerToCreate object.
+        Passenger createdPassenger = objectMapper.readValue(
+                objectMapper.writeValueAsString(passengerToCreate),
+                Passenger.class);
+        when(passengerRepository.save(passengerToCreate))
+                .thenReturn(createdPassenger);
+
+        String seatClass = "business";
+        LocalDate dateOfBirth = LocalDate.of(2015, 1, 1);
+
+        Passenger newPassenger = passengerService.create(passengerToCreate,
+                originAirportCode, destinationAirportCode, airplaneModel,
+                departureTime, arrivalTime, seatClass, dateOfBirth);
+        assertThat(newPassenger, is(createdPassenger));
+    }
+
+    @Test
+    public void create_ElderlyPassengerInEconomyClass_PassengerCreated()
+            throws JsonMappingException, JsonProcessingException {
+        String originAirportCode = "ABC";
+        String destinationAirportCode = "BCD";
+        String airplaneModel = "model";
+        LocalDateTime departureTime = LocalDateTime.of(2022, 1, 1, 1, 0);
+        LocalDateTime arrivalTime = LocalDateTime.of(2022, 1, 1, 2, 0);
+        Flight flight = new Flight();
+        flight.setEconomyClassPrice(1.01);
+        flight.setReservedEconomyClassSeatsCount(1);
+        Optional<Flight> flightOptional = Optional.of(flight);
+        when(flightRepository.identifyFlight(originAirportCode,
+                destinationAirportCode, airplaneModel, departureTime,
+                arrivalTime)).thenReturn(flightOptional);
+
+        Discount discount = new Discount();
+        discount.setDiscountRate(0.5d);
+        Optional<Discount> discountOptional = Optional.of(discount);
+        when(discountRepository.findByDiscountType("elderly"))
+                .thenReturn(discountOptional);
+
+        Passenger passengerToCreate = new Passenger();
+        Booking bookingToFind = new Booking();
+        String confirmationCode = "confirmation_code";
+        bookingToFind.setConfirmationCode(confirmationCode);
+        passengerToCreate.setBooking(bookingToFind);
+
+        Booking foundBooking = new Booking();
+        foundBooking.setLayoverCount(0);
+        foundBooking.setTotalPrice(0d);
+        Optional<Booking> bookingOptional = Optional.of(foundBooking);
+        when(bookingRepository.findByConfirmationCode(confirmationCode))
+                .thenReturn(bookingOptional);
+
+        // Clone passengerToCreate object.
+        Passenger createdPassenger = objectMapper.readValue(
+                objectMapper.writeValueAsString(passengerToCreate),
+                Passenger.class);
+        when(passengerRepository.save(passengerToCreate))
+                .thenReturn(createdPassenger);
+
+        String seatClass = "economy";
+        LocalDate dateOfBirth = LocalDate.of(1950, 1, 1);
+
+        Passenger newPassenger = passengerService.create(passengerToCreate,
+                originAirportCode, destinationAirportCode, airplaneModel,
+                departureTime, arrivalTime, seatClass, dateOfBirth);
+        assertThat(newPassenger, is(createdPassenger));
+    }
+
+    @Test
+    public void create_NoFirstClassSeats_FlightNotCreated()
+            throws JsonMappingException, JsonProcessingException {
+        String originAirportCode = "ABC";
+        String destinationAirportCode = "BCD";
+        String airplaneModel = "model";
+        LocalDateTime departureTime = LocalDateTime.of(2022, 1, 1, 1, 0);
+        LocalDateTime arrivalTime = LocalDateTime.of(2022, 1, 1, 2, 0);
+        Flight flight = new Flight();
+        flight.setFirstClassPrice(1.01);
+        flight.setReservedFirstClassSeatsCount(0);
+        Optional<Flight> flightOptional = Optional.of(flight);
+        when(flightRepository.identifyFlight(originAirportCode,
+                destinationAirportCode, airplaneModel, departureTime,
+                arrivalTime)).thenReturn(flightOptional);
+
+        Passenger passengerToCreate = new Passenger();
+        Booking bookingToFind = new Booking();
+        String confirmationCode = "confirmation_code";
+        bookingToFind.setConfirmationCode(confirmationCode);
+        passengerToCreate.setBooking(bookingToFind);
+
+        String seatClass = "first";
+        LocalDate dateOfBirth = LocalDate.of(2000, 1, 1);
+
+        Exception exception = assertThrows(ResponseStatusException.class,
+                () -> passengerService.create(passengerToCreate,
+                        originAirportCode, destinationAirportCode,
+                        airplaneModel, departureTime, arrivalTime, seatClass,
+                        dateOfBirth));
+        assertThat(exception.getLocalizedMessage(),
+                containsString("There are 0 reserved first class seats."));
+    }
+
+    @Test
+    public void create_NoBusinessClassSeats_FlightNotCreated()
+            throws JsonMappingException, JsonProcessingException {
+        String originAirportCode = "ABC";
+        String destinationAirportCode = "BCD";
+        String airplaneModel = "model";
+        LocalDateTime departureTime = LocalDateTime.of(2022, 1, 1, 1, 0);
+        LocalDateTime arrivalTime = LocalDateTime.of(2022, 1, 1, 2, 0);
+        Flight flight = new Flight();
+        flight.setBusinessClassPrice(1.01);
+        flight.setReservedBusinessClassSeatsCount(0);
+        Optional<Flight> flightOptional = Optional.of(flight);
+        when(flightRepository.identifyFlight(originAirportCode,
+                destinationAirportCode, airplaneModel, departureTime,
+                arrivalTime)).thenReturn(flightOptional);
+
+        Passenger passengerToCreate = new Passenger();
+        Booking bookingToFind = new Booking();
+        String confirmationCode = "confirmation_code";
+        bookingToFind.setConfirmationCode(confirmationCode);
+        passengerToCreate.setBooking(bookingToFind);
+
+        String seatClass = "business";
+        LocalDate dateOfBirth = LocalDate.of(2000, 1, 1);
+
+        Exception exception = assertThrows(ResponseStatusException.class,
+                () -> passengerService.create(passengerToCreate,
+                        originAirportCode, destinationAirportCode,
+                        airplaneModel, departureTime, arrivalTime, seatClass,
+                        dateOfBirth));
+        assertThat(exception.getLocalizedMessage(),
+                containsString("There are 0 reserved business class seats."));
+    }
+
+    @Test
+    public void create_NoEconomyClassSeats_FlightNotCreated()
+            throws JsonMappingException, JsonProcessingException {
+        String originAirportCode = "ABC";
+        String destinationAirportCode = "BCD";
+        String airplaneModel = "model";
+        LocalDateTime departureTime = LocalDateTime.of(2022, 1, 1, 1, 0);
+        LocalDateTime arrivalTime = LocalDateTime.of(2022, 1, 1, 2, 0);
+        Flight flight = new Flight();
+        flight.setEconomyClassPrice(1.01);
+        flight.setReservedEconomyClassSeatsCount(0);
+        Optional<Flight> flightOptional = Optional.of(flight);
+        when(flightRepository.identifyFlight(originAirportCode,
+                destinationAirportCode, airplaneModel, departureTime,
+                arrivalTime)).thenReturn(flightOptional);
+
+        Passenger passengerToCreate = new Passenger();
+        Booking bookingToFind = new Booking();
+        String confirmationCode = "confirmation_code";
+        bookingToFind.setConfirmationCode(confirmationCode);
+        passengerToCreate.setBooking(bookingToFind);
+
+        String seatClass = "economy";
+        LocalDate dateOfBirth = LocalDate.of(2000, 1, 1);
+
+        Exception exception = assertThrows(ResponseStatusException.class,
+                () -> passengerService.create(passengerToCreate,
+                        originAirportCode, destinationAirportCode,
+                        airplaneModel, departureTime, arrivalTime, seatClass,
+                        dateOfBirth));
+        assertThat(exception.getLocalizedMessage(),
+                containsString("There are 0 reserved economy class seats."));
+    }
     @Test
     public void updatePassenger_ValidPassenger_PassengerUpdated() {
         Passenger updatingPassenger = new Passenger();

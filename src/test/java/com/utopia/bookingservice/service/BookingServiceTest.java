@@ -12,7 +12,6 @@ import java.util.Optional;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.utopia.bookingservice.dto.BookingResponseDto;
 import com.utopia.bookingservice.entity.Booking;
 import com.utopia.bookingservice.entity.User;
 import com.utopia.bookingservice.repository.BookingRepository;
@@ -47,20 +46,60 @@ public class BookingServiceTest {
 
     @Test
     public void findAll_BookingsFound() {
-        BookingResponseDto bookingDto = new BookingResponseDto();
-        bookingDto.setId(1L);
-        bookingDto.setActive(Boolean.TRUE);
-        bookingDto.setConfirmationCode("a");
-        bookingDto.setLayoverCount(0);
-        bookingDto.setTotalPrice(0.01);
-        Booking booking = modelMapper.map(bookingDto, Booking.class);
-        Page<Booking> bookingsPage = new PageImpl<Booking>(
-                Arrays.asList(booking));
+        Booking foundBooking = new Booking();
+        foundBooking.setId(1L);
+        foundBooking.setActive(Boolean.TRUE);
+        foundBooking.setConfirmationCode("a");
+        foundBooking.setLayoverCount(0);
+        foundBooking.setTotalPrice(0.01);
+        Page<Booking> foundBookingsPage = new PageImpl<Booking>(
+                Arrays.asList(foundBooking));
         Pageable pageable = PageRequest.of(0, 1);
-        when(bookingRepository.findAll(pageable)).thenReturn(bookingsPage);
+        when(bookingRepository.findAll(pageable)).thenReturn(foundBookingsPage);
 
-        Page<Booking> foundBookingsPage = bookingService.findAll(0, 1);
-        assertThat(foundBookingsPage, is(bookingsPage));
+        Page<Booking> returnedBookingsPage = bookingService.findAll(0, 1);
+        assertThat(returnedBookingsPage, is(foundBookingsPage));
+    }
+
+    @Test
+    public void findByConfirmationCode_ValidConfirmationCode_BookingFound() {
+        Booking foundBooking = new Booking();
+        foundBooking.setId(1L);
+        foundBooking.setActive(Boolean.TRUE);
+        String confirmationCode = "a";
+        foundBooking.setConfirmationCode(confirmationCode);
+        foundBooking.setLayoverCount(0);
+        foundBooking.setTotalPrice(0.01);
+        when(bookingRepository.findByConfirmationCode(confirmationCode))
+                .thenReturn(Optional.of(foundBooking));
+
+        Booking returnedBooking = bookingService
+                .findByConfirmationCode(confirmationCode);
+        assertThat(returnedBooking, is(foundBooking));
+    }
+
+    @Test
+    public void findByConfirmationCodeContaining_ValidSearchTerm_BookingsPageFound() {
+        Booking foundBooking = new Booking();
+        foundBooking.setId(1L);
+        foundBooking.setActive(Boolean.TRUE);
+        String confirmationCode = "a";
+        foundBooking.setConfirmationCode(confirmationCode);
+        foundBooking.setLayoverCount(0);
+        foundBooking.setTotalPrice(0.01);
+        String searchTerm = "a";
+        Page<Booking> foundBookingsPage = new PageImpl<Booking>(
+                Arrays.asList(foundBooking));
+        Integer pageIndex = 0;
+        Integer pageSize = 1;
+        when(bookingRepository.findByConfirmationCodeContaining(searchTerm,
+                PageRequest.of(pageIndex, pageSize)))
+                        .thenReturn(foundBookingsPage);
+
+        Page<Booking> returnedBookingsPage = bookingService
+                .findByConfirmationCodeContaining(searchTerm, pageIndex,
+                        pageSize);
+        assertThat(returnedBookingsPage, is(foundBookingsPage));
     }
 
     @Test
@@ -80,7 +119,7 @@ public class BookingServiceTest {
     }
 
     @Test
-    public void createBooking_ValidBooking_BookingCreated() {
+    public void create_ValidBooking_BookingCreated() {
         Booking bookingToCreate = new Booking();
         bookingToCreate.setId(1L);
         bookingToCreate.setActive(Boolean.TRUE);

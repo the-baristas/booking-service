@@ -49,7 +49,7 @@ public class PaymentControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = { "CUSTOMER" })
+    @WithMockUser(authorities = { "ROLE_CUSTOMER" })
     public void testCreatePaymentIntent() throws Exception {
         PaymentIntentInfoDto paymentInfo = new PaymentIntentInfoDto(9001,
                 "usd");
@@ -75,7 +75,7 @@ public class PaymentControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = { "CUSTOMER" })
+    @WithMockUser(authorities = { "ROLE_CUSTOMER" })
     void testCreatePayment() {
         PaymentDto paymentDto = new PaymentDto(1L, "stripeid", false);
         Booking booking = new Booking();

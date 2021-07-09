@@ -1,7 +1,5 @@
 package com.utopia.bookingservice.service;
 
-import java.util.List;
-
 import com.utopia.bookingservice.entity.Booking;
 import com.utopia.bookingservice.entity.User;
 import com.utopia.bookingservice.repository.BookingRepository;
@@ -35,11 +33,11 @@ public class BookingService {
                                 + confirmationCode));
     }
 
-    public Page<Booking> findByConfirmationCodeContaining(
-            String confirmationCode, Integer pageIndex, Integer pageSize) {
+    public Page<Booking> findByConfirmationCodeContaining(String searchTerm,
+            Integer pageIndex, Integer pageSize) {
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
-        return bookingRepository
-                .findByConfirmationCodeContaining(confirmationCode, pageable);
+        return bookingRepository.findByConfirmationCodeContaining(searchTerm,
+                pageable);
     }
 
     public Page<Booking> findByUsername(String username, Integer pageIndex,

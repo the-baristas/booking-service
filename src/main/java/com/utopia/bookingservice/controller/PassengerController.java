@@ -48,7 +48,7 @@ public class PassengerController {
         this.modelMapper.addMappings(new PassengerCreationDtoMap());
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @GetMapping
     public ResponseEntity<Page<PassengerResponseDto>> findAll(
             @RequestParam("index") Integer pageIndex,
@@ -60,7 +60,7 @@ public class PassengerController {
         return ResponseEntity.ok(passengerDtosPage);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @GetMapping("{id}")
     public ResponseEntity<PassengerResponseDto> findById(
             @PathVariable Long id) {
@@ -70,7 +70,7 @@ public class PassengerController {
         return ResponseEntity.ok(passengerDto);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @GetMapping("search")
     public ResponseEntity<Page<PassengerResponseDto>> findByConfirmationCodeOrUsernameContaining(
             @RequestParam("term") String searchTerm,
@@ -84,7 +84,7 @@ public class PassengerController {
         return ResponseEntity.ok(passengerDtosPage);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @GetMapping("distinct_search")
     public ResponseEntity<Page<PassengerResponseDto>> findDistinctByConfirmationCodeOrUsernameContaining(
             @RequestParam("term") String searchTerm,
@@ -98,7 +98,7 @@ public class PassengerController {
         return ResponseEntity.ok(passengerDtos);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
     @PostMapping
     public ResponseEntity<PassengerResponseDto> create(
             @Valid @RequestBody PassengerCreationDto passengerCreationDto,
@@ -126,7 +126,7 @@ public class PassengerController {
                 .body(createdPassengerDto);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
     @PutMapping("{id}")
     public ResponseEntity<PassengerResponseDto> update(@PathVariable Long id,
             @Valid @RequestBody PassengerUpdateDto passengerUpdateDto,
@@ -140,7 +140,7 @@ public class PassengerController {
         return ResponseEntity.ok(updatedPassengerDto);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
     @DeleteMapping("{id}")
     public ResponseEntity<Void> deleteById(@PathVariable Long id) {
         passengerService.deleteById(id);

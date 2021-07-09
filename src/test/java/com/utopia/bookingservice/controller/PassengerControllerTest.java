@@ -58,38 +58,41 @@ public class PassengerControllerTest {
     @Value("${jwt.secret-key")
     private String jwtSecretKey;
 
+    private ObjectMapper objectMapper = new ObjectMapper();
+
     @BeforeEach
     public void setUp() {
         webTestClient = MockMvcWebTestClient.bindTo(mockMvc).build();
     }
 
     @Test
-    @WithMockUser(roles = { "ADMIN" })
+    @WithMockUser(authorities = { "ROLE_ADMIN" })
     public void findAll_PassengersFound()
             throws JsonProcessingException, Exception {
         Passenger passenger = new Passenger();
         Page<Passenger> foundPassengersPage = new PageImpl<Passenger>(
                 Arrays.asList(passenger));
         when(passengerService.findAll(0, 1)).thenReturn(foundPassengersPage);
-        Page<PassengerResponseDto> foundPassengerDtosPage = foundPassengersPage.map(
-                (Passenger p) -> modelMapper.map(p, PassengerResponseDto.class));
+        Page<PassengerResponseDto> foundPassengerDtosPage = foundPassengersPage
+                .map((Passenger p) -> modelMapper.map(p,
+                        PassengerResponseDto.class));
 
         webTestClient.get().uri("/passengers?index=0&size=1")
                 .accept(MediaType.APPLICATION_JSON).exchange().expectStatus()
                 .isOk().expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBody(String.class).isEqualTo(new ObjectMapper()
+                .expectBody(String.class).isEqualTo(objectMapper
                         .writeValueAsString(foundPassengerDtosPage));
 
         mockMvc.perform(get("/passengers?index=0&size=1")
                 .contentType(MediaType.APPLICATION_JSON)).andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(new ObjectMapper()
+                .andExpect(content().string(objectMapper
                         .writeValueAsString(foundPassengerDtosPage)));
     }
 
     @Test
-    @WithMockUser(roles = { "ADMIN" })
+    @WithMockUser(authorities = { "ROLE_ADMIN" })
     public void findByConfirmationCodeOrUsernameContaining_ValidSearchTerm_PassengersFound()
             throws JsonProcessingException, Exception {
         Passenger passenger = new Passenger();
@@ -101,20 +104,21 @@ public class PassengerControllerTest {
         when(passengerService.findByConfirmationCodeOrUsernameContaining(
                 searchTerm, pageIndex, pageSize))
                         .thenReturn(foundPassengersPage);
-        Page<PassengerResponseDto> foundPassengerDtosPage = foundPassengersPage.map(
-                (Passenger p) -> modelMapper.map(p, PassengerResponseDto.class));
+        Page<PassengerResponseDto> foundPassengerDtosPage = foundPassengersPage
+                .map((Passenger p) -> modelMapper.map(p,
+                        PassengerResponseDto.class));
 
         mockMvc.perform(
                 get("/passengers/search?term={searchTerm}&index=0&size=1",
                         searchTerm).contentType(MediaType.APPLICATION_JSON))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(new ObjectMapper()
+                .andExpect(content().string(objectMapper
                         .writeValueAsString(foundPassengerDtosPage)));
     }
 
     @Test
-    @WithMockUser(roles = { "ADMIN" })
+    @WithMockUser(authorities = { "ROLE_ADMIN" })
     public void findDistinctByConfirmationCodeOrUsernameContaining_ValidSearchTerm_PassengersFound()
             throws JsonProcessingException, Exception {
         Passenger passenger = new Passenger();
@@ -126,25 +130,22 @@ public class PassengerControllerTest {
         when(passengerService
                 .findDistinctByConfirmationCodeOrUsernameContaining(searchTerm,
                         pageIndex, pageSize)).thenReturn(foundPassengersPage);
-        Page<PassengerResponseDto> foundPassengerDtosPage = foundPassengersPage.map(
-                (Passenger p) -> modelMapper.map(p, PassengerResponseDto.class));
+        Page<PassengerResponseDto> foundPassengerDtosPage = foundPassengersPage
+                .map((Passenger p) -> modelMapper.map(p,
+                        PassengerResponseDto.class));
 
         mockMvc.perform(get(
                 "/passengers/distinct_search?term={searchTerm}&index=0&size=1",
                 searchTerm).contentType(MediaType.APPLICATION_JSON))
                 .andDo(print()).andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(new ObjectMapper()
+                .andExpect(content().string(objectMapper
                         .writeValueAsString(foundPassengerDtosPage)));
     }
 
     @Test
-    @WithMockUser(roles = { "ADMIN" })
+    @WithMockUser(authorities = { "ROLE_ADMIN" })
     public void createPassenger_ValidPassenger_PassengerCreated() {
-        String jwtToken = JWT.create().withSubject("username")
-                .withExpiresAt(new Date(System.currentTimeMillis() + 900_000))
-                .sign(Algorithm.HMAC512(jwtSecretKey.getBytes()));
-
         PassengerCreationDto passengerCreationDto = new PassengerCreationDto();
         String bookingConfirmationCode = "confirmation_code";
         String originAirportCode = "ABC";
@@ -179,12 +180,16 @@ public class PassengerControllerTest {
         Passenger passengerToCreate = modelMapper.map(passengerCreationDto,
                 Passenger.class);
         Passenger createdPassenger = new Passenger();
-        PassengerResponseDto createdPassengerDto = modelMapper.map(createdPassenger,
-                PassengerResponseDto.class);
+        PassengerResponseDto createdPassengerDto = modelMapper
+                .map(createdPassenger, PassengerResponseDto.class);
         when(passengerService.create(passengerToCreate, originAirportCode,
                 destinationAirportCode, airplaneModel, departureTime,
                 arrivalTime, seatClass, dateOfBirth))
                         .thenReturn(createdPassenger);
+
+        String jwtToken = JWT.create().withSubject("username")
+                .withExpiresAt(new Date(System.currentTimeMillis() + 900_000))
+                .sign(Algorithm.HMAC512(jwtSecretKey.getBytes()));
 
         webTestClient.post().uri("/passengers")
                 .headers((HttpHeaders headers) -> {
@@ -198,7 +203,7 @@ public class PassengerControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = { "ADMIN" })
+    @WithMockUser(authorities = { "ROLE_ADMIN" })
     public void updatePassenger_ValidPassenger_PassengerUpdated()
             throws JsonMappingException, JsonProcessingException {
         PassengerUpdateDto passengerUpdateDto = new PassengerUpdateDto();
@@ -218,8 +223,8 @@ public class PassengerControllerTest {
         when(passengerService.update(id, targetPassenger))
                 .thenReturn(updatedPassenger);
 
-        PassengerResponseDto updatedPassengerDto = modelMapper.map(updatedPassenger,
-                PassengerResponseDto.class);
+        PassengerResponseDto updatedPassengerDto = modelMapper
+                .map(updatedPassenger, PassengerResponseDto.class);
 
         webTestClient.put().uri("/passengers/{id}", id)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -230,12 +235,12 @@ public class PassengerControllerTest {
     }
 
     @Test
-    public void deletePassengerById_ValidId_PassengerDeleted() {
-        Passenger passenger = new Passenger();
+    @WithMockUser(authorities = { "ROLE_ADMIN" })
+    public void deletePassengerById_ValidId_NoContent() {
         Long id = 1L;
-        passenger.setId(id);
 
-        passengerService.deleteById(id);
+        webTestClient.delete().uri("/passengers/{id}", id).exchange()
+                .expectStatus().isNoContent();
         verify(passengerService, times(1)).deleteById(id);
     }
 }

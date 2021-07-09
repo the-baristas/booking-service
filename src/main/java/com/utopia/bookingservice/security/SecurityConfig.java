@@ -7,7 +7,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.config.http.SessionCreationPolicy;
 
 @Configuration
 @EnableWebSecurity
@@ -18,15 +18,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.cors().and().csrf()
-                .csrfTokenRepository(
-                        CookieCsrfTokenRepository.withHttpOnlyFalse()).and()
-                .authorizeRequests().mvcMatchers(HttpMethod.GET, "/")
-                .permitAll()
+        http.cors().and().csrf().disable().authorizeRequests()
+                .mvcMatchers(HttpMethod.GET, "/").permitAll()
                 .mvcMatchers("/v3/api-docs/**", "/swagger-ui/**",
                         "/swagger-ui.html").permitAll()
                 .anyRequest().authenticated().and()
                 .addFilter(new JwtAuthorizationFilter(authenticationManager(),
-                        jwtSecretKey));
+                        jwtSecretKey))
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
 }
