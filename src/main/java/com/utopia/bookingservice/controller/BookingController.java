@@ -1,5 +1,7 @@
 package com.utopia.bookingservice.controller;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.validation.Valid;
@@ -8,6 +10,9 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utopia.bookingservice.dto.BookingCreationDto;
 import com.utopia.bookingservice.dto.BookingResponseDto;
 import com.utopia.bookingservice.dto.BookingUpdateDto;
@@ -16,7 +21,6 @@ import com.utopia.bookingservice.exception.ModelMapperFailedException;
 import com.utopia.bookingservice.propertymap.BookingCreationDtoMap;
 import com.utopia.bookingservice.propertymap.BookingMap;
 import com.utopia.bookingservice.propertymap.FlightMap;
-import com.utopia.bookingservice.security.JwtUtils;
 import com.utopia.bookingservice.service.BookingService;
 
 import org.modelmapper.ModelMapper;
@@ -73,7 +77,7 @@ public class BookingController {
         return ResponseEntity.ok("Health is OK.");
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @GetMapping("bookings")
     public ResponseEntity<Page<BookingResponseDto>> findAll(
             @RequestParam("index") Integer pageIndex,
@@ -85,17 +89,18 @@ public class BookingController {
         return ResponseEntity.ok(bookingDtosPage);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @GetMapping("bookings/{confirmation_code}")
     public ResponseEntity<BookingResponseDto> findByConfirmationCode(
             @PathVariable("confirmation_code") String confirmationCode) {
         final Booking booking = bookingService
                 .findByConfirmationCode(confirmationCode);
-        final BookingResponseDto bookingDto = this.convertToResponseDto(booking);
+        final BookingResponseDto bookingDto = this
+                .convertToResponseDto(booking);
         return ResponseEntity.ok(bookingDto);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @GetMapping("bookings/search")
     public ResponseEntity<Page<BookingResponseDto>> findBookingsByConfirmationCodeContaining(
             @RequestParam("confirmation_code") String confirmationCode,
@@ -109,7 +114,7 @@ public class BookingController {
         return ResponseEntity.ok(bookingDtosPage);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
     @GetMapping("bookings/username/{username}")
     public ResponseEntity<Page<BookingResponseDto>> findByUsername(
             @PathVariable("username") String username,
@@ -124,34 +129,36 @@ public class BookingController {
         return ResponseEntity.ok(bookingDtosPage);
     }
 
-    private void checkUsernameRequestMatchesResponse(String bearerToken,
+    private void checkUsernameRequestMatchesResponse(String jwtToken,
             String responseUsername) throws ResponseStatusException {
-        // String username = JwtUtils.getUsernameFromToken(bearerToken,
-        //         jwtSecretKey);
-        // String role = JwtUtils.getRoleFromToken(bearerToken, jwtSecretKey);
+        try {
+            DecodedJWT jwt = JWT.decode(jwtToken);
+            String username = jwt.getSubject();
 
-        // if (!role.contains("ADMIN") && !username.equals(responseUsername)) {
-        //     throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-        //             "Only admins can access another user's information.");
-        // }
-    }
+            Claim claim = jwt.getClaim("authorities");
+            System.out.printf("Claim is null: %s%n", claim.isNull());
+            List<String> list = claim.asList(String.class);
+            String rolesMapString = list.get(0);
+            TypeReference<HashMap<String, String>> typeRef = new TypeReference<HashMap<String, String>>() {
+            };
+            Map<String, String> map = new ObjectMapper()
+                    .readValue(rolesMapString, typeRef);
+            String role = map.get("authority");
 
-    private void checkUsernameRequestMatchesResponse2(String bearerToken,
-            String responseUsername) throws ResponseStatusException {
-        String username = JwtUtils.getUsernameFromToken(bearerToken,
-                jwtSecretKey);
-        String role = JwtUtils.getRoleFromToken(bearerToken, jwtSecretKey);
-
-        // if the user who sent the request is not an admin, then they can't
-        // view other users' information
-        // they can only view and alter their own
-        if (!role.contains("ADMIN") && !username.equals(responseUsername)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Only admins can access another user's information.");
+            if (!role.contains("ADMIN") && !username.equals(responseUsername)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Only admins can access another user's information.");
+            }
+        } catch (JWTDecodeException exception) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "JWT decoding failed.", exception);
+        } catch (JsonProcessingException exception) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "ObjectMapper failed.", exception);
         }
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
     @PostMapping("bookings")
     public ResponseEntity<BookingResponseDto> create(
             @Valid @RequestBody BookingCreationDto bookingCreationDto,
@@ -161,28 +168,29 @@ public class BookingController {
 
         Booking createdBooking = bookingService
                 .create(bookingCreationDto.getUsername(), bookingToCreate);
-        BookingResponseDto createdBookingDto = convertToResponseDto(createdBooking);
+        BookingResponseDto createdBookingDto = convertToResponseDto(
+                createdBooking);
         return ResponseEntity
                 .created(builder.path("/bookings/{id}")
                         .build(createdBookingDto.getId()))
                 .body(createdBookingDto);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @PutMapping("bookings/{id}")
     public ResponseEntity<BookingResponseDto> update(@PathVariable Long id,
-            @Valid @RequestBody BookingUpdateDto bookingUpdateDto)
-            throws ModelMapperFailedException {
-        Booking targetBooking;
-        targetBooking = modelMapper.map(bookingUpdateDto, Booking.class);
+            @Valid @RequestBody BookingUpdateDto bookingUpdateDto) {
+        Booking targetBooking = modelMapper.map(bookingUpdateDto,
+                Booking.class);
         Booking updatedBooking = bookingService.update(id, targetBooking);
-        BookingResponseDto updatedBookingDto = convertToResponseDto(updatedBooking);
+        BookingResponseDto updatedBookingDto = convertToResponseDto(
+                updatedBooking);
         return ResponseEntity.ok(updatedBookingDto);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
     @DeleteMapping("bookings/{id}")
-    public ResponseEntity<Void> deleteBooking(@PathVariable Long id)
+    public ResponseEntity<Void> deleteById(@PathVariable Long id)
             throws ModelMapperFailedException {
         bookingService.deleteById(id);
         return ResponseEntity.noContent().build();

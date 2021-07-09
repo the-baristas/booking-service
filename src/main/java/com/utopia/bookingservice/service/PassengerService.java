@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PassengerService {
     private static final Double LAYOVER_DISCOUNT_RATE = 0.1;
-    private static final Integer CHILD_DISCOUNT_AGE = 2;
+    private static final Integer CHILD_DISCOUNT_AGE = 12;
     private static final Integer ELDERLY_DISCOUNT_AGE = 65;
     private static final String FIRST_CLASS_VALUE = "first";
     private static final String BUSINESS_CLASS_VALUE = "business";
