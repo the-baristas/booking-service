@@ -98,7 +98,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ApiError> handleAccessDeniedException(
             AccessDeniedException exception) {
         ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED,
-                exception.getLocalizedMessage(),
+                exception.getMessage(),
                 HttpStatus.UNAUTHORIZED.getReasonPhrase());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiError);
     }

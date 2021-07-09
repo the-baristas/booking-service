@@ -26,6 +26,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PassengerService {
     private static final Double LAYOVER_DISCOUNT_RATE = 0.1;
+    private static final Integer CHILD_DISCOUNT_AGE = 12;
+    private static final Integer ELDERLY_DISCOUNT_AGE = 65;
+    private static final String FIRST_CLASS_VALUE = "first";
+    private static final String BUSINESS_CLASS_VALUE = "business";
+    private static final String ECONOMY_CLASS_VALUE = "economy";
 
     private final PassengerRepository passengerRepository;
     private final FlightRepository flightRepository;
@@ -43,6 +48,7 @@ public class PassengerService {
                         "Could not find passenger with id=" + id));
     }
 
+    // TODO: Extract code into methods.
     public Passenger create(Passenger passengerToCreate,
             String originAirportCode, String destinationAirportCode,
             String airplaneModel, LocalDateTime departureTime,
@@ -57,27 +63,71 @@ public class PassengerService {
                                 + ", " + destinationAirportCode + ", "
                                 + airplaneModel + ", " + departureTime + ", "
                                 + arrivalTime));
+
+        // Check if there are any seats left for the seat class.
+        switch (seatClass) {
+            case FIRST_CLASS_VALUE: {
+                Integer reservedSeatsCount = flight
+                        .getReservedFirstClassSeatsCount();
+                if (reservedSeatsCount.equals(0)) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "There are 0 reserved first class seats.");
+                } else {
+                    flight.setReservedFirstClassSeatsCount(
+                            reservedSeatsCount - 1);
+                }
+                break;
+            }
+            case BUSINESS_CLASS_VALUE: {
+                Integer reservedSeatsCount = flight
+                        .getReservedBusinessClassSeatsCount();
+                if (reservedSeatsCount.equals(0)) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "There are 0 reserved business class seats.");
+                } else {
+                    flight.setReservedBusinessClassSeatsCount(
+                            reservedSeatsCount - 1);
+                }
+                break;
+            }
+            case ECONOMY_CLASS_VALUE: {
+                Integer reservedSeatsCount = flight
+                        .getReservedEconomyClassSeatsCount();
+                if (reservedSeatsCount.equals(0)) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "There are 0 reserved economy class seats.");
+                } else {
+                    flight.setReservedEconomyClassSeatsCount(
+                            reservedSeatsCount - 1);
+                }
+                break;
+            }
+            default:
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Invalid seat class: " + seatClass);
+        }
         passengerToCreate.setFlight(flight);
 
         Double basePrice = 0d;
         switch (seatClass) {
-            case "first":
+            case FIRST_CLASS_VALUE:
                 basePrice = flight.getFirstClassPrice();
                 break;
-            case "business":
+            case BUSINESS_CLASS_VALUE:
                 basePrice = flight.getBusinessClassPrice();
                 break;
-            case "economy":
+            case ECONOMY_CLASS_VALUE:
                 basePrice = flight.getEconomyClassPrice();
                 break;
             default:
-                break;
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Invalid flight seat class: " + seatClass);
         }
         Integer age = Period.between(dateOfBirth, LocalDate.now()).getYears();
         String discountType;
-        if (age <= 2) {
+        if (age <= CHILD_DISCOUNT_AGE) {
             discountType = "child";
-        } else if (age >= 65) {
+        } else if (age >= ELDERLY_DISCOUNT_AGE) {
             discountType = "elderly";
         } else {
             discountType = "none";
@@ -99,7 +149,7 @@ public class PassengerService {
                                 + confirmationCode));
         Integer layoverCount = booking.getLayoverCount();
         Double totalPrice = booking.getTotalPrice()
-                + +calculateTotalPrice(basePrice, discountRate, layoverCount);
+                + calculateTotalPrice(basePrice, discountRate, layoverCount);
         booking.setTotalPrice(totalPrice);
         passengerToCreate.setBooking(booking);
         try {
@@ -120,12 +170,18 @@ public class PassengerService {
         return basePrice * discountRate;
     }
 
-    public Passenger update(Passenger passenger) {
-        passengerRepository.findById(passenger.getId()).orElseThrow(
+    public Passenger update(Long id, Passenger passenger) {
+        passengerRepository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Could not find passenger with id="
-                                + passenger.getId()));
-        return passengerRepository.save(passenger);
+                        "Could not find passenger with id=" + id));
+        try {
+            passenger.setId(id);
+            passengerRepository.save(passenger);
+            return passengerRepository.findById(id).get();
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Could not update passenger with id = " + id);
+        }
     }
 
     public void deleteById(Long id) {
