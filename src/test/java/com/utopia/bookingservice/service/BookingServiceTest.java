@@ -7,12 +7,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utopia.bookingservice.entity.Booking;
+import com.utopia.bookingservice.entity.Flight;
+import com.utopia.bookingservice.entity.Passenger;
 import com.utopia.bookingservice.entity.User;
 import com.utopia.bookingservice.repository.BookingRepository;
 import com.utopia.bookingservice.repository.UserRepository;
@@ -35,6 +38,9 @@ public class BookingServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PassengerService passengerService;
 
     @InjectMocks
     private BookingService bookingService;
@@ -146,20 +152,67 @@ public class BookingServiceTest {
     }
 
     @Test
-    public void update_ValidIdValidBooking_BookingUpdated()
+    public void update_NoNewValues_BookingUpdated()
             throws JsonMappingException, JsonProcessingException {
         Long id = 1L;
-        Booking targetBooking = new Booking();
+        Booking bookingToUpdate = new Booking();
         when(bookingRepository.findById(id))
-                .thenReturn(Optional.of(new Booking()));
+                .thenReturn(Optional.of(bookingToUpdate));
 
         Booking updatedBooking = objectMapper.readValue(
-                objectMapper.writeValueAsString(targetBooking), Booking.class);
-        when(bookingRepository.save(targetBooking)).thenReturn(updatedBooking);
+                objectMapper.writeValueAsString(bookingToUpdate),
+                Booking.class);
+        when(bookingRepository.save(bookingToUpdate))
+                .thenReturn(updatedBooking);
 
-        Booking newBooking = bookingService.update(id, targetBooking);
+        String confirmationCode = "confirmation_code";
+        Boolean active = Boolean.TRUE;
+        Integer layoverCount = 0;
+        Double totalPrice = 1.01;
+        Booking newBooking = bookingService.update(id, confirmationCode, active,
+                layoverCount, totalPrice);
 
         assertThat(newBooking, is(updatedBooking));
+    }
+
+    @Test
+    public void update_ActiveFalseChangedFromTrue_BookingUpdated()
+            throws JsonMappingException, JsonProcessingException {
+        Long id = 1L;
+        Booking bookingToUpdate = new Booking();
+        bookingToUpdate.setId(id);
+        bookingToUpdate.setActive(Boolean.TRUE);
+        Passenger passenger1 = new Passenger();
+        passenger1.setSeatClass("first");
+        passenger1.setFlight(new Flight());
+        passenger1.getFlight().setReservedFirstClassSeatsCount(0);
+        Passenger passenger2 = new Passenger();
+        passenger2.setSeatClass("business");
+        passenger2.setFlight(new Flight());
+        passenger2.getFlight().setReservedFirstClassSeatsCount(0);
+        List<Passenger> passengers = Arrays.asList(passenger1, passenger2);
+        bookingToUpdate.setPassengers(passengers);
+        when(bookingRepository.findById(id))
+                .thenReturn(Optional.of(bookingToUpdate));
+
+        Booking updatedBooking = objectMapper.readValue(
+                objectMapper.writeValueAsString(bookingToUpdate),
+                Booking.class);
+        when(bookingRepository.save(bookingToUpdate))
+                .thenReturn(updatedBooking);
+
+        String confirmationCode = "confirmation_code";
+        Boolean active = Boolean.FALSE;
+        Integer layoverCount = 0;
+        Double totalPrice = 1.01;
+        Booking newBooking = bookingService.update(id, confirmationCode, active,
+                layoverCount, totalPrice);
+
+        assertThat(newBooking, is(updatedBooking));
+        verify(passengerService, times(1)).decrementReservedSeatsCount(
+                passenger1.getSeatClass(), passenger1.getFlight());
+        verify(passengerService, times(1)).decrementReservedSeatsCount(
+                passenger2.getSeatClass(), passenger2.getFlight());
     }
 
     @Test

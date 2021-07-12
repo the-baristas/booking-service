@@ -176,7 +176,7 @@ public class PassengerService {
             return passengerRepository.save(passenger);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Could not update passenger with id = " + id);
+                    "Could not update passenger with id = " + id, e);
         }
     }
 
@@ -245,7 +245,7 @@ public class PassengerService {
         }
     }
 
-    private void decrementReservedSeatsCount(String seatClass, Flight flight) {
+    public void decrementReservedSeatsCount(String seatClass, Flight flight) {
         switch (seatClass) {
             case FIRST_CLASS: {
                 Integer reservedSeatsCount = flight

@@ -1,6 +1,9 @@
 package com.utopia.bookingservice.service;
 
+import java.util.List;
+
 import com.utopia.bookingservice.entity.Booking;
+import com.utopia.bookingservice.entity.Passenger;
 import com.utopia.bookingservice.entity.User;
 import com.utopia.bookingservice.repository.BookingRepository;
 import com.utopia.bookingservice.repository.UserRepository;
@@ -19,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 public class BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
+    private final PassengerService passengerService;
 
     public Page<Booking> findAll(Integer pageIndex, Integer pageSize) {
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
@@ -68,18 +72,28 @@ public class BookingService {
         }
     }
 
-    public Booking update(Long id, Booking targetBooking) {
-        bookingRepository.findById(id).orElseThrow(
+    public Booking update(Long id, String confirmationCode, Boolean newActive,
+            Integer layoverCount, Double totalPrice) {
+        Booking booking = bookingRepository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Could not find booking with id: " + id));
-        targetBooking.setId(id);
+        Boolean currentActive = booking.getActive();
+        List<Passenger> passengers = booking.getPassengers();
+        if (currentActive && !newActive) {
+            for (Passenger passenger : passengers) {
+                passengerService.decrementReservedSeatsCount(
+                        passenger.getSeatClass(), passenger.getFlight());
+            }
+        }
+        booking.setConfirmationCode(confirmationCode);
+        booking.setActive(newActive);
+        booking.setLayoverCount(layoverCount);
+        booking.setTotalPrice(totalPrice);
         try {
-            return bookingRepository.save(targetBooking);
+            return bookingRepository.save(booking);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Could not update booking with id: "
-                            + targetBooking.getId(),
-                    e);
+                    "Could not update booking with id: " + id, e);
         }
     }
 
