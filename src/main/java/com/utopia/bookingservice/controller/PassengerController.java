@@ -120,9 +120,9 @@ public class PassengerController {
                 departureTime, arrivalTime, seatClass, dateOfBirth);
         PassengerResponseDto createdPassengerDto = modelMapper
                 .map(createdPassenger, PassengerResponseDto.class);
+        Long id = createdPassengerDto.getId();
         return ResponseEntity
-                .created(builder.path("/passengers/{id}")
-                        .build(createdPassengerDto.getId()))
+                .created(builder.path("/passengers/{id}").build(id))
                 .body(createdPassengerDto);
     }
 

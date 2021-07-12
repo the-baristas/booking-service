@@ -170,9 +170,8 @@ public class BookingController {
                 .create(bookingCreationDto.getUsername(), bookingToCreate);
         BookingResponseDto createdBookingDto = convertToResponseDto(
                 createdBooking);
-        return ResponseEntity
-                .created(builder.path("/bookings/{id}")
-                        .build(createdBookingDto.getId()))
+        Long id = createdBookingDto.getId();
+        return ResponseEntity.created(builder.path("/bookings/{id}").build(id))
                 .body(createdBookingDto);
     }
 
