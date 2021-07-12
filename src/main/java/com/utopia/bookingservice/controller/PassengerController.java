@@ -56,7 +56,7 @@ public class PassengerController {
         final Page<Passenger> passengersPage = passengerService
                 .findAll(pageIndex, pageSize);
         final Page<PassengerResponseDto> passengerDtosPage = passengersPage
-                .map(this::convertToGetDto);
+                .map(this::convertToResponseDto);
         return ResponseEntity.ok(passengerDtosPage);
     }
 
@@ -80,7 +80,7 @@ public class PassengerController {
                 .findByConfirmationCodeOrUsernameContaining(searchTerm,
                         pageIndex, pageSize);
         Page<PassengerResponseDto> passengerDtosPage = passengersPage
-                .map(this::convertToGetDto);
+                .map(this::convertToResponseDto);
         return ResponseEntity.ok(passengerDtosPage);
     }
 
@@ -94,7 +94,7 @@ public class PassengerController {
                 .findDistinctByConfirmationCodeOrUsernameContaining(searchTerm,
                         pageIndex, pageSize);
         Page<PassengerResponseDto> passengerDtos = passengers
-                .map(this::convertToGetDto);
+                .map(this::convertToResponseDto);
         return ResponseEntity.ok(passengerDtos);
     }
 
@@ -131,11 +131,15 @@ public class PassengerController {
     public ResponseEntity<PassengerResponseDto> update(@PathVariable Long id,
             @Valid @RequestBody PassengerUpdateDto passengerUpdateDto,
             UriComponentsBuilder builder) {
-        Passenger targetPassenger = modelMapper.map(passengerUpdateDto,
-                Passenger.class);
         Passenger updatedPassenger = passengerService.update(id,
-                targetPassenger);
-        PassengerResponseDto updatedPassengerDto = convertToGetDto(
+                passengerUpdateDto.getGivenName(),
+                passengerUpdateDto.getFamilyName(),
+                passengerUpdateDto.getDateOfBirth(),
+                passengerUpdateDto.getGender(), passengerUpdateDto.getAddress(),
+                passengerUpdateDto.getSeatClass(),
+                passengerUpdateDto.getSeatNumber(),
+                passengerUpdateDto.getCheckInGroup());
+        PassengerResponseDto updatedPassengerDto = convertToResponseDto(
                 updatedPassenger);
         return ResponseEntity.ok(updatedPassengerDto);
     }
@@ -147,7 +151,7 @@ public class PassengerController {
         return ResponseEntity.noContent().build();
     }
 
-    private PassengerResponseDto convertToGetDto(Passenger passenger) {
+    private PassengerResponseDto convertToResponseDto(Passenger passenger) {
         return modelMapper.map(passenger, PassengerResponseDto.class);
     }
 }
