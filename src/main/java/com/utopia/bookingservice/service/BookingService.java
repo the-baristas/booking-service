@@ -1,6 +1,9 @@
 package com.utopia.bookingservice.service;
 
+import java.util.List;
+
 import com.utopia.bookingservice.entity.Booking;
+import com.utopia.bookingservice.entity.Passenger;
 import com.utopia.bookingservice.entity.User;
 import com.utopia.bookingservice.repository.BookingRepository;
 import com.utopia.bookingservice.repository.UserRepository;
@@ -19,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 public class BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
+    private final PassengerService passengerService;
 
     public Page<Booking> findAll(Integer pageIndex, Integer pageSize) {
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
@@ -68,30 +72,44 @@ public class BookingService {
         }
     }
 
-    public Booking update(Long id, Booking targetBooking) {
-        bookingRepository.findById(id).orElseThrow(
+    public Booking update(Long id, String confirmationCode, Boolean newActive,
+            Integer layoverCount, Double totalPrice) {
+        Booking bookingToUpdate = bookingRepository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Could not find booking with id: " + id));
-        targetBooking.setId(id);
+        Boolean currentActive = bookingToUpdate.getActive();
+        if (currentActive && !newActive) {
+            decrementReservedSeatsCounts(bookingToUpdate.getPassengers());
+        }
+        bookingToUpdate.setConfirmationCode(confirmationCode);
+        bookingToUpdate.setActive(newActive);
+        bookingToUpdate.setLayoverCount(layoverCount);
+        bookingToUpdate.setTotalPrice(totalPrice);
         try {
-            return bookingRepository.save(targetBooking);
+            return bookingRepository.save(bookingToUpdate);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Could not update booking with id: "
-                            + targetBooking.getId(),
-                    e);
+                    "Could not update booking with id: " + id, e);
         }
     }
 
     public void deleteById(Long id) throws ResponseStatusException {
-        bookingRepository.findById(id).orElseThrow(
+        Booking bookingToDelete = bookingRepository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Could not find booking with id = " + id));
+        decrementReservedSeatsCounts(bookingToDelete.getPassengers());
         try {
             bookingRepository.deleteById(id);
-        } catch (IllegalArgumentException exception) {
+        } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Could not delete booking with id: " + id, exception);
+                    "Could not delete booking with id: " + id, e);
+        }
+    }
+
+    private void decrementReservedSeatsCounts(List<Passenger> passengers) {
+        for (Passenger passenger : passengers) {
+            passengerService.decrementReservedSeatsCount(
+                    passenger.getSeatClass(), passenger.getFlight());
         }
     }
 }

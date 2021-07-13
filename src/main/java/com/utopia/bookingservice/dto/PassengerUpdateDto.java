@@ -14,8 +14,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PassengerUpdateDto {
-    private Long id;
-
     @NotBlank
     private String givenName;
 

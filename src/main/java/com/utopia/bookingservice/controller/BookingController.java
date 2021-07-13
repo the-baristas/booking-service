@@ -170,9 +170,8 @@ public class BookingController {
                 .create(bookingCreationDto.getUsername(), bookingToCreate);
         BookingResponseDto createdBookingDto = convertToResponseDto(
                 createdBooking);
-        return ResponseEntity
-                .created(builder.path("/bookings/{id}")
-                        .build(createdBookingDto.getId()))
+        Long id = createdBookingDto.getId();
+        return ResponseEntity.created(builder.path("/bookings/{id}").build(id))
                 .body(createdBookingDto);
     }
 
@@ -182,7 +181,9 @@ public class BookingController {
             @Valid @RequestBody BookingUpdateDto bookingUpdateDto) {
         Booking targetBooking = modelMapper.map(bookingUpdateDto,
                 Booking.class);
-        Booking updatedBooking = bookingService.update(id, targetBooking);
+        Booking updatedBooking = bookingService.update(id,
+                targetBooking.getConfirmationCode(), targetBooking.getActive(),
+                targetBooking.getLayoverCount(), targetBooking.getTotalPrice());
         BookingResponseDto updatedBookingDto = convertToResponseDto(
                 updatedBooking);
         return ResponseEntity.ok(updatedBookingDto);
