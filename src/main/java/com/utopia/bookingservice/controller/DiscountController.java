@@ -8,6 +8,7 @@ import com.utopia.bookingservice.service.DiscountService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -23,7 +24,7 @@ public class DiscountController {
     @Autowired
     private ModelMapper modelMapper;
 
-
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @GetMapping
     public Page<DiscountDto> findAll(@RequestParam("index") Integer pageIndex,
                                      @RequestParam("size") Integer pageSize){
@@ -31,6 +32,7 @@ public class DiscountController {
         return discounts.map(this::convertToDto);
     }
 
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @PutMapping
     public DiscountDto update(@Valid @RequestBody DiscountDto discountDto){
         Discount discount = convertToEntity((discountDto));

@@ -87,6 +87,14 @@ intent.
 
   Create a payment intent.
 
+- [GET /discounts] (#get-discounts)
+
+   Get a page of discounts.
+
+- [PUT /discounts] (#put-discounts)
+
+   Update a discount.
+
 ## GET /bookings
 
 ### Parameters:
@@ -814,6 +822,65 @@ stripe_id (string)
     "clientSecret": "string"
 }
 ```
+
+## GET /passengers
+
+### Parameters:
+
+index (integer)
+
+size (integer)
+
+### Response:
+
+```
+{
+  "totalPages": 0,
+  "totalElements": 0,
+  "last": true,
+  "size": 0,
+  "content": [
+    {
+      "discountType": "string",
+      "discountRate": 0,
+    }
+  ],
+  "number": 0,
+  "sort": {
+    "unsorted": true,
+    "sorted": true,
+    "empty": true
+  },
+  "numberOfElements": 0,
+  "first": true,
+  "pageable": {
+    "paged": true,
+    "unpaged": true,
+    "offset": 0,
+    "sort": {
+      "unsorted": true,
+      "sorted": true,
+      "empty": true
+    },
+    "pageNumber": 0,
+    "pageSize": 0
+  },
+  "empty": true
+}
+```
+
+## PUT /payments
+
+### Request body:
+
+```
+{
+  "discountType": "string",
+  "discountRate": 0
+}
+```
+
+
 
 ## Required environment variables
 
