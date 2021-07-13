@@ -823,7 +823,7 @@ stripe_id (string)
 }
 ```
 
-## GET /passengers
+## GET /discounts
 
 ### Parameters:
 
@@ -869,7 +869,7 @@ size (integer)
 }
 ```
 
-## PUT /payments
+## PUT /discounts
 
 ### Request body:
 
