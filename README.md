@@ -87,13 +87,14 @@ intent.
 
   Create a payment intent.
 
-- [GET /discounts] (#get-discounts)
+- [GET /discounts]((#get-discounts)
 
-   Get a page of discounts.
+  Get a page of discounts.
 
-- [PUT /discounts] (#put-discounts)
+- [PUT /discounts](#put-discounts)
 
-   Update a discount.
+  Update a discount.
+   
 
 ## GET /bookings
 
