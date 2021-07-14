@@ -92,4 +92,32 @@ public class PaymentControllerTest {
                 .expectBody(PaymentDto.class).isEqualTo(paymentDto);
     }
 
+    @Test
+    void testFindByStripeId(){
+        PaymentDto paymentDto = new PaymentDto(1L, "stripeid", false);
+        Booking booking = new Booking();
+        booking.setId(paymentDto.getBookingId());
+        Payment payment = new Payment(booking, paymentDto.getStripeId(),
+                paymentDto.isRefunded());
+
+        when(paymentService.findByStripeId(payment.getStripeId())).thenReturn(payment);
+
+        webTestClient.get().uri("/payments/" + payment.getStripeId())
+                .exchange().expectStatus().isOk().expectHeader()
+                .contentType(MediaType.APPLICATION_JSON)
+                .expectBody(PaymentDto.class).isEqualTo(paymentDto);
+    }
+
+    @Test
+    void testDeletePayment(){
+        PaymentDto paymentDto = new PaymentDto(1L, "stripeid", false);
+        Booking booking = new Booking();
+        booking.setId(paymentDto.getBookingId());
+        Payment payment = new Payment(booking, paymentDto.getStripeId(),
+                paymentDto.isRefunded());
+
+        webTestClient.delete().uri("/payments/" + payment.getStripeId())
+                .exchange().expectStatus().isNoContent();
+    }
+
 }
