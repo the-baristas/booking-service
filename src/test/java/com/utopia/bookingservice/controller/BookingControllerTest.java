@@ -47,6 +47,8 @@ public class BookingControllerTest {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+
     @MockBean
     private BookingService bookingService;
 
