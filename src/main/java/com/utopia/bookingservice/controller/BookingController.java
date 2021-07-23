@@ -2,7 +2,6 @@ package com.utopia.bookingservice.controller;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.validation.Valid;
 
@@ -10,9 +9,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utopia.bookingservice.dto.BookingCreationDto;
 import com.utopia.bookingservice.dto.BookingResponseDto;
 import com.utopia.bookingservice.dto.BookingUpdateDto;
@@ -21,14 +17,10 @@ import com.utopia.bookingservice.exception.ModelMapperFailedException;
 import com.utopia.bookingservice.propertymap.BookingCreationDtoMap;
 import com.utopia.bookingservice.propertymap.BookingMap;
 import com.utopia.bookingservice.propertymap.FlightMap;
-import com.utopia.bookingservice.repository.BookingRepository;
-import com.utopia.bookingservice.repository.FlightRepository;
-import com.utopia.bookingservice.repository.UserRepository;
 import com.utopia.bookingservice.security.JwtUtils;
 import com.utopia.bookingservice.service.BookingService;
 
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -134,21 +126,15 @@ public class BookingController {
     }
 
     private void checkUsernameRequestMatchesResponse(String bearerToken,
-            String responseUsername) throws ResponseStatusException {
+            String responseUsername) {
         try {
             String jwtToken = bearerToken.replace(JwtUtils.TOKEN_PREFIX, "");
             DecodedJWT jwt = JWT.decode(jwtToken);
             String username = jwt.getSubject();
 
             Claim claim = jwt.getClaim("authorities");
-            System.out.printf("Claim is null: %s%n", claim.isNull());
-            List<String> list = claim.asList(String.class);
-            String rolesMapString = list.get(0);
-            TypeReference<HashMap<String, String>> typeRef = new TypeReference<HashMap<String, String>>() {
-            };
-            Map<String, String> map = new ObjectMapper()
-                    .readValue(rolesMapString, typeRef);
-            String role = map.get("authority");
+            List<HashMap> authorities = claim.asList(HashMap.class);
+            String role = (String) authorities.get(0).get("authority");
 
             if (!role.contains("ADMIN") && !username.equals(responseUsername)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN,
@@ -157,9 +143,6 @@ public class BookingController {
         } catch (JWTDecodeException exception) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
                     "JWT decoding failed.", exception);
-        } catch (JsonProcessingException exception) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
-                    "ObjectMapper failed.", exception);
         }
     }
 

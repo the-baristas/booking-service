@@ -67,9 +67,7 @@ public class BookingControllerTest {
         Map<String, String> authorityMap = new HashMap<>();
         authorityMap.put("authority", "ROLE_ADMIN");
         jwtToken = JWT.create().withSubject("username")
-                .withClaim("authorities",
-                        Arrays.asList(
-                                objectMapper.writeValueAsString(authorityMap)))
+                .withClaim("authorities", Arrays.asList(authorityMap))
                 .withExpiresAt(new Date(System.currentTimeMillis() + 900_000))
                 .sign(Algorithm.HMAC512(jwtSecretKey.getBytes()));
     }
