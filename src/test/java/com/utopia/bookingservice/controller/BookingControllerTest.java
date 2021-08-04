@@ -47,6 +47,8 @@ public class BookingControllerTest {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+
     @MockBean
     private BookingService bookingService;
 
@@ -216,6 +218,8 @@ public class BookingControllerTest {
         String confirmationCode = "confirmation_code";
         updateDto.setConfirmationCode(confirmationCode);
         Integer layoverCount = 0;
+        Boolean active = Boolean.TRUE;
+        updateDto.setActive(active);
         updateDto.setLayoverCount(layoverCount);
         Double totalPrice = 1.01;
         updateDto.setTotalPrice(totalPrice);
@@ -224,8 +228,8 @@ public class BookingControllerTest {
         Booking targetBooking = modelMapper.map(updateDto, Booking.class);
         Booking updatedBooking = objectMapper.readValue(
                 objectMapper.writeValueAsString(targetBooking), Booking.class);
-        when(bookingService.update(id, targetBooking))
-                .thenReturn(updatedBooking);
+        when(bookingService.update(id, confirmationCode, active, layoverCount,
+                totalPrice)).thenReturn(updatedBooking);
 
         BookingResponseDto responseDto = modelMapper.map(updatedBooking,
                 BookingResponseDto.class);

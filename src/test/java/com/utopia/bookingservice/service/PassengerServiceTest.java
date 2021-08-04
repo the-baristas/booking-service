@@ -16,6 +16,7 @@ import java.util.Optional;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.utopia.bookingservice.entity.Airplane;
 import com.utopia.bookingservice.entity.Airport;
 import com.utopia.bookingservice.entity.Booking;
 import com.utopia.bookingservice.entity.Discount;
@@ -151,14 +152,17 @@ public class PassengerServiceTest {
         LocalDateTime arrivalTime = LocalDateTime.of(2022, 1, 1, 2, 0);
         Flight flight = new Flight();
         flight.setFirstClassPrice(1.01);
-        flight.setReservedFirstClassSeatsCount(1);
+        flight.setReservedFirstClassSeatsCount(0);
+        Airplane airplane = new Airplane();
+        airplane.setMaxFirstClassSeatsCount(1);
+        flight.setAirplane(airplane);
         Optional<Flight> flightOptional = Optional.of(flight);
         when(flightRepository.identifyFlight(originAirportCode,
                 destinationAirportCode, airplaneModel, departureTime,
                 arrivalTime)).thenReturn(flightOptional);
 
         Discount discount = new Discount();
-        discount.setDiscountRate(0d);
+        discount.setDiscountRate(1d);
         Optional<Discount> discountOptional = Optional.of(discount);
         when(discountRepository.findByDiscountType("none"))
                 .thenReturn(discountOptional);
@@ -171,7 +175,7 @@ public class PassengerServiceTest {
 
         Booking foundBooking = new Booking();
         foundBooking.setLayoverCount(0);
-        foundBooking.setTotalPrice(0d);
+        foundBooking.setTotalPrice(1.01);
         Optional<Booking> bookingOptional = Optional.of(foundBooking);
         when(bookingRepository.findByConfirmationCode(confirmationCode))
                 .thenReturn(bookingOptional);
@@ -190,6 +194,7 @@ public class PassengerServiceTest {
                 originAirportCode, destinationAirportCode, airplaneModel,
                 departureTime, arrivalTime, seatClass, dateOfBirth);
         assertThat(newPassenger, is(createdPassenger));
+        assertThat(foundBooking.getTotalPrice(), is(2.02));
     }
 
     @Test
@@ -203,6 +208,9 @@ public class PassengerServiceTest {
         Flight flight = new Flight();
         flight.setBusinessClassPrice(1.01);
         flight.setReservedBusinessClassSeatsCount(1);
+        Airplane airplane = new Airplane();
+        airplane.setMaxBusinessClassSeatsCount(2);
+        flight.setAirplane(airplane);
         Optional<Flight> flightOptional = Optional.of(flight);
         when(flightRepository.identifyFlight(originAirportCode,
                 destinationAirportCode, airplaneModel, departureTime,
@@ -254,6 +262,9 @@ public class PassengerServiceTest {
         Flight flight = new Flight();
         flight.setEconomyClassPrice(1.01);
         flight.setReservedEconomyClassSeatsCount(1);
+        Airplane airplane = new Airplane();
+        airplane.setMaxEconomyClassSeatsCount(2);
+        flight.setAirplane(airplane);
         Optional<Flight> flightOptional = Optional.of(flight);
         when(flightRepository.identifyFlight(originAirportCode,
                 destinationAirportCode, airplaneModel, departureTime,
@@ -304,7 +315,10 @@ public class PassengerServiceTest {
         LocalDateTime arrivalTime = LocalDateTime.of(2022, 1, 1, 2, 0);
         Flight flight = new Flight();
         flight.setFirstClassPrice(1.01);
-        flight.setReservedFirstClassSeatsCount(0);
+        flight.setReservedFirstClassSeatsCount(1);
+        Airplane airplane = new Airplane();
+        airplane.setMaxFirstClassSeatsCount(1);
+        flight.setAirplane(airplane);
         Optional<Flight> flightOptional = Optional.of(flight);
         when(flightRepository.identifyFlight(originAirportCode,
                 destinationAirportCode, airplaneModel, departureTime,
@@ -325,7 +339,7 @@ public class PassengerServiceTest {
                         airplaneModel, departureTime, arrivalTime, seatClass,
                         dateOfBirth));
         assertThat(exception.getLocalizedMessage(),
-                containsString("There are 0 reserved first class seats."));
+                containsString("There are 0 available first class seats."));
     }
 
     @Test
@@ -339,6 +353,9 @@ public class PassengerServiceTest {
         Flight flight = new Flight();
         flight.setBusinessClassPrice(1.01);
         flight.setReservedBusinessClassSeatsCount(0);
+        Airplane airplane = new Airplane();
+        airplane.setMaxBusinessClassSeatsCount(0);
+        flight.setAirplane(airplane);
         Optional<Flight> flightOptional = Optional.of(flight);
         when(flightRepository.identifyFlight(originAirportCode,
                 destinationAirportCode, airplaneModel, departureTime,
@@ -359,7 +376,7 @@ public class PassengerServiceTest {
                         airplaneModel, departureTime, arrivalTime, seatClass,
                         dateOfBirth));
         assertThat(exception.getLocalizedMessage(),
-                containsString("There are 0 reserved business class seats."));
+                containsString("There are 0 available business class seats."));
     }
 
     @Test
@@ -372,7 +389,10 @@ public class PassengerServiceTest {
         LocalDateTime arrivalTime = LocalDateTime.of(2022, 1, 1, 2, 0);
         Flight flight = new Flight();
         flight.setEconomyClassPrice(1.01);
-        flight.setReservedEconomyClassSeatsCount(0);
+        flight.setReservedEconomyClassSeatsCount(1);
+        Airplane airplane = new Airplane();
+        airplane.setMaxEconomyClassSeatsCount(1);
+        flight.setAirplane(airplane);
         Optional<Flight> flightOptional = Optional.of(flight);
         when(flightRepository.identifyFlight(originAirportCode,
                 destinationAirportCode, airplaneModel, departureTime,
@@ -383,31 +403,224 @@ public class PassengerServiceTest {
         String confirmationCode = "confirmation_code";
         bookingToFind.setConfirmationCode(confirmationCode);
         passengerToCreate.setBooking(bookingToFind);
-
         String seatClass = "economy";
         LocalDate dateOfBirth = LocalDate.of(2000, 1, 1);
-
         Exception exception = assertThrows(ResponseStatusException.class,
                 () -> passengerService.create(passengerToCreate,
                         originAirportCode, destinationAirportCode,
                         airplaneModel, departureTime, arrivalTime, seatClass,
                         dateOfBirth));
-        assertThat(exception.getLocalizedMessage(),
-                containsString("There are 0 reserved economy class seats."));
+        assertThat(exception.getMessage(),
+                containsString("There are 0 available economy class seats."));
     }
-    @Test
-    public void updatePassenger_ValidPassenger_PassengerUpdated() {
-        Passenger updatingPassenger = new Passenger();
-        Long id = 1L;
-        updatingPassenger.setId(id);
-        Optional<Passenger> passengerOptional = Optional.of(updatingPassenger);
-        when(passengerRepository.findById(id)).thenReturn(passengerOptional);
-        when(passengerRepository.save(updatingPassenger))
-                .thenReturn(updatingPassenger);
 
-        Passenger updatedPassenger = passengerService.update(id,
-                updatingPassenger);
-        assertThat(updatedPassenger, is(updatingPassenger));
+    @Test
+    public void update_ValidPassenger_PassengerUpdated()
+            throws JsonMappingException, JsonProcessingException {
+        Passenger currentPassenger = new Passenger();
+        Long id = 1L;
+        currentPassenger.setId(id);
+        currentPassenger.setSeatClass("first");
+        currentPassenger.setFlight(new Flight());
+        currentPassenger.getFlight().setReservedFirstClassSeatsCount(1);
+        currentPassenger.getFlight().setAirplane(new Airplane());
+        currentPassenger.getFlight().getAirplane()
+                .setMaxFirstClassSeatsCount(1);
+        when(passengerRepository.findById(id))
+                .thenReturn(Optional.of(currentPassenger));
+
+        Passenger updatedPassenger = objectMapper.readValue(
+                objectMapper.writeValueAsString(currentPassenger),
+                Passenger.class);
+        when(passengerRepository.save(currentPassenger))
+                .thenReturn(updatedPassenger);
+
+        String givenName = "first_name";
+        String familyName = "family_name";
+        LocalDate dateOfBirth = LocalDate.of(2000, 1, 1);
+        String gender = "nonbinary";
+        String address = "1 Main Street Test City, FL 12345";
+        String newSeatClass = "first";
+        Integer seatNumber = 1;
+        Integer checkInGroup = 1;
+        Passenger returnedPassenger = passengerService.update(id, givenName,
+                familyName, dateOfBirth, gender, address, newSeatClass,
+                seatNumber, checkInGroup);
+        assertThat(returnedPassenger, is(updatedPassenger));
+    }
+
+    @Test
+    public void update_ChangedBusinessClassToFirstClass_ReservedSeatsCountUpdated()
+            throws JsonMappingException, JsonProcessingException {
+        Long id = 1L;
+        Passenger currentPassenger = new Passenger();
+        currentPassenger.setId(id);
+        currentPassenger.setSeatClass("business");
+        currentPassenger.setFlight(new Flight());
+        currentPassenger.getFlight().setReservedFirstClassSeatsCount(0);
+        currentPassenger.getFlight().setReservedBusinessClassSeatsCount(1);
+        currentPassenger.getFlight().setAirplane(new Airplane());
+        currentPassenger.getFlight().getAirplane()
+                .setMaxFirstClassSeatsCount(1);
+        currentPassenger.getFlight().getAirplane()
+                .setMaxBusinessClassSeatsCount(1);
+        when(passengerRepository.findById(id))
+                .thenReturn(Optional.of(currentPassenger));
+
+        Passenger updatedPassenger = objectMapper.readValue(
+                objectMapper.writeValueAsString(currentPassenger),
+                Passenger.class);
+        updatedPassenger.getFlight().setReservedFirstClassSeatsCount(1);
+        updatedPassenger.getFlight().setReservedBusinessClassSeatsCount(0);
+        when(passengerRepository.save(currentPassenger))
+                .thenReturn(updatedPassenger);
+
+        String givenName = "first_name";
+        String familyName = "family_name";
+        LocalDate dateOfBirth = LocalDate.of(2000, 1, 1);
+        String gender = "nonbinary";
+        String address = "1 Main Street Test City, FL 12345";
+        String newSeatClass = "first";
+        Integer seatNumber = 1;
+        Integer checkInGroup = 1;
+        Passenger returnedPassenger = passengerService.update(id, givenName,
+                familyName, dateOfBirth, gender, address, newSeatClass,
+                seatNumber, checkInGroup);
+        assertThat(returnedPassenger, is(updatedPassenger));
+        assertThat(
+                returnedPassenger.getFlight().getReservedFirstClassSeatsCount(),
+                is(1));
+        assertThat(returnedPassenger.getFlight()
+                .getReservedBusinessClassSeatsCount(), is(0));
+    }
+
+    @Test
+    public void update_FullFirstClassFromBusinessClass_Failed()
+            throws JsonMappingException, JsonProcessingException {
+        Long id = 1L;
+        Passenger currentPassenger = new Passenger();
+        currentPassenger.setId(id);
+        currentPassenger.setSeatClass("business");
+        currentPassenger.setFlight(new Flight());
+        currentPassenger.getFlight().setReservedFirstClassSeatsCount(0);
+        currentPassenger.getFlight().setReservedBusinessClassSeatsCount(0);
+        currentPassenger.getFlight().setAirplane(new Airplane());
+        currentPassenger.getFlight().getAirplane()
+                .setMaxFirstClassSeatsCount(1);
+        currentPassenger.getFlight().getAirplane()
+                .setMaxBusinessClassSeatsCount(1);
+        when(passengerRepository.findById(id))
+                .thenReturn(Optional.of(currentPassenger));
+
+        Passenger updatedPassenger = objectMapper.readValue(
+                objectMapper.writeValueAsString(currentPassenger),
+                Passenger.class);
+        updatedPassenger.getFlight().setReservedFirstClassSeatsCount(1);
+        updatedPassenger.getFlight().setReservedBusinessClassSeatsCount(0);
+
+        String givenName = "first_name";
+        String familyName = "family_name";
+        LocalDate dateOfBirth = LocalDate.of(2000, 1, 1);
+        String gender = "nonbinary";
+        String address = "1 Main Street Test City, FL 12345";
+        String newSeatClass = "first";
+        Integer seatNumber = 1;
+        Integer checkInGroup = 1;
+        Exception exception = assertThrows(ResponseStatusException.class,
+                () -> passengerService.update(id, givenName, familyName,
+                        dateOfBirth, gender, address, newSeatClass, seatNumber,
+                        checkInGroup));
+        assertThat(exception.getMessage(),
+                containsString("There are 0 reserved seats in business class."));
+    }
+
+    @Test
+    public void update_ChangedEconomyClassToBusinessClass_ReservedSeatsCountUpdated()
+            throws JsonMappingException, JsonProcessingException {
+        Long id = 1L;
+        Passenger currentPassenger = new Passenger();
+        currentPassenger.setId(id);
+        currentPassenger.setSeatClass("economy");
+        currentPassenger.setFlight(new Flight());
+        currentPassenger.getFlight().setReservedBusinessClassSeatsCount(0);
+        currentPassenger.getFlight().setReservedEconomyClassSeatsCount(1);
+        currentPassenger.getFlight().setAirplane(new Airplane());
+        currentPassenger.getFlight().getAirplane()
+                .setMaxBusinessClassSeatsCount(1);
+        currentPassenger.getFlight().getAirplane()
+                .setMaxEconomyClassSeatsCount(1);
+        when(passengerRepository.findById(id))
+                .thenReturn(Optional.of(currentPassenger));
+
+        Passenger updatedPassenger = objectMapper.readValue(
+                objectMapper.writeValueAsString(currentPassenger),
+                Passenger.class);
+        updatedPassenger.getFlight().setReservedBusinessClassSeatsCount(1);
+        updatedPassenger.getFlight().setReservedEconomyClassSeatsCount(0);
+        when(passengerRepository.save(currentPassenger))
+                .thenReturn(updatedPassenger);
+
+        String givenName = "first_name";
+        String familyName = "family_name";
+        LocalDate dateOfBirth = LocalDate.of(2000, 1, 1);
+        String gender = "nonbinary";
+        String address = "1 Main Street Test City, FL 12345";
+        String newSeatClass = "business";
+        Integer seatNumber = 1;
+        Integer checkInGroup = 1;
+        Passenger returnedPassenger = passengerService.update(id, givenName,
+                familyName, dateOfBirth, gender, address, newSeatClass,
+                seatNumber, checkInGroup);
+        assertThat(returnedPassenger, is(updatedPassenger));
+        assertThat(returnedPassenger.getFlight()
+                .getReservedBusinessClassSeatsCount(), is(1));
+        assertThat(returnedPassenger.getFlight()
+                .getReservedEconomyClassSeatsCount(), is(0));
+    }
+
+    @Test
+    public void update_ChangedFirstClassToBusinessClass_ReservedSeatsCountUpdated()
+            throws JsonMappingException, JsonProcessingException {
+        Long id = 1L;
+        Passenger currentPassenger = new Passenger();
+        currentPassenger.setId(id);
+        currentPassenger.setSeatClass("first");
+        currentPassenger.setFlight(new Flight());
+        currentPassenger.getFlight().setReservedFirstClassSeatsCount(1);
+        currentPassenger.getFlight().setReservedBusinessClassSeatsCount(0);
+        currentPassenger.getFlight().setAirplane(new Airplane());
+        currentPassenger.getFlight().getAirplane()
+                .setMaxFirstClassSeatsCount(1);
+        currentPassenger.getFlight().getAirplane()
+                .setMaxBusinessClassSeatsCount(1);
+        when(passengerRepository.findById(id))
+                .thenReturn(Optional.of(currentPassenger));
+
+        Passenger updatedPassenger = objectMapper.readValue(
+                objectMapper.writeValueAsString(currentPassenger),
+                Passenger.class);
+        updatedPassenger.getFlight().setReservedFirstClassSeatsCount(0);
+        updatedPassenger.getFlight().setReservedBusinessClassSeatsCount(1);
+        when(passengerRepository.save(currentPassenger))
+                .thenReturn(updatedPassenger);
+
+        String givenName = "first_name";
+        String familyName = "family_name";
+        LocalDate dateOfBirth = LocalDate.of(2000, 1, 1);
+        String gender = "nonbinary";
+        String address = "1 Main Street Test City, FL 12345";
+        String newSeatClass = "business";
+        Integer seatNumber = 1;
+        Integer checkInGroup = 1;
+        Passenger returnedPassenger = passengerService.update(id, givenName,
+                familyName, dateOfBirth, gender, address, newSeatClass,
+                seatNumber, checkInGroup);
+        assertThat(returnedPassenger, is(updatedPassenger));
+        assertThat(
+                returnedPassenger.getFlight().getReservedFirstClassSeatsCount(),
+                is(0));
+        assertThat(returnedPassenger.getFlight()
+                .getReservedBusinessClassSeatsCount(), is(1));
     }
 
     @Test

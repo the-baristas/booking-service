@@ -1,6 +1,7 @@
 package com.utopia.bookingservice.dto;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
 
 import lombok.AllArgsConstructor;
@@ -13,6 +14,9 @@ import lombok.NoArgsConstructor;
 public class BookingUpdateDto {
     @NotBlank
     private String confirmationCode;
+
+    @NotNull
+    private Boolean active;
 
     @PositiveOrZero
     private Integer layoverCount;

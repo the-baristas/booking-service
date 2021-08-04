@@ -7,12 +7,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utopia.bookingservice.entity.Booking;
+import com.utopia.bookingservice.entity.Flight;
+import com.utopia.bookingservice.entity.Passenger;
 import com.utopia.bookingservice.entity.User;
 import com.utopia.bookingservice.repository.BookingRepository;
 import com.utopia.bookingservice.repository.UserRepository;
@@ -29,12 +32,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
-public class BookingServiceTest {
+class BookingServiceTest {
     @Mock
     private BookingRepository bookingRepository;
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PassengerService passengerService;
 
     @InjectMocks
     private BookingService bookingService;
@@ -45,7 +51,7 @@ public class BookingServiceTest {
     private ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
-    public void findAll_BookingsFound() {
+    void findAll_BookingsFound() {
         Booking foundBooking = new Booking();
         foundBooking.setId(1L);
         foundBooking.setActive(Boolean.TRUE);
@@ -62,7 +68,7 @@ public class BookingServiceTest {
     }
 
     @Test
-    public void findByConfirmationCode_ValidConfirmationCode_BookingFound() {
+    void findByConfirmationCode_ValidConfirmationCode_BookingFound() {
         Booking foundBooking = new Booking();
         foundBooking.setId(1L);
         foundBooking.setActive(Boolean.TRUE);
@@ -79,7 +85,7 @@ public class BookingServiceTest {
     }
 
     @Test
-    public void findByConfirmationCodeContaining_ValidSearchTerm_BookingsPageFound() {
+    void findByConfirmationCodeContaining_ValidSearchTerm_BookingsPageFound() {
         Booking foundBooking = new Booking();
         foundBooking.setId(1L);
         foundBooking.setActive(Boolean.TRUE);
@@ -103,7 +109,7 @@ public class BookingServiceTest {
     }
 
     @Test
-    public void findByUsername_ValidUsername_BookingFound() {
+    void findByUsername_ValidUsername_BookingFound() {
         String username = "username";
         Page<Booking> foundBookingsPage = new PageImpl<Booking>(
                 Arrays.asList(new Booking()));
@@ -119,7 +125,7 @@ public class BookingServiceTest {
     }
 
     @Test
-    public void create_ValidBooking_BookingCreated() {
+    void create_ValidBooking_BookingCreated() {
         Booking bookingToCreate = new Booking();
         bookingToCreate.setId(1L);
         bookingToCreate.setActive(Boolean.TRUE);
@@ -146,29 +152,94 @@ public class BookingServiceTest {
     }
 
     @Test
-    public void update_ValidIdValidBooking_BookingUpdated()
+    void update_NoNewValues_BookingUpdated()
             throws JsonMappingException, JsonProcessingException {
         Long id = 1L;
-        Booking targetBooking = new Booking();
+        Booking bookingToUpdate = new Booking();
         when(bookingRepository.findById(id))
-                .thenReturn(Optional.of(new Booking()));
+                .thenReturn(Optional.of(bookingToUpdate));
 
         Booking updatedBooking = objectMapper.readValue(
-                objectMapper.writeValueAsString(targetBooking), Booking.class);
-        when(bookingRepository.save(targetBooking)).thenReturn(updatedBooking);
+                objectMapper.writeValueAsString(bookingToUpdate),
+                Booking.class);
+        when(bookingRepository.save(bookingToUpdate))
+                .thenReturn(updatedBooking);
 
-        Booking newBooking = bookingService.update(id, targetBooking);
+        String confirmationCode = "confirmation_code";
+        Boolean active = Boolean.TRUE;
+        Integer layoverCount = 0;
+        Double totalPrice = 1.01;
+        Booking newBooking = bookingService.update(id, confirmationCode, active,
+                layoverCount, totalPrice);
 
         assertThat(newBooking, is(updatedBooking));
     }
 
     @Test
-    public void deleteById_ValidId_BookingDeleted() {
+    void update_ActiveFalseChangedFromTrue_BookingUpdated()
+            throws JsonMappingException, JsonProcessingException {
         Long id = 1L;
+        Booking bookingToUpdate = new Booking();
+        bookingToUpdate.setId(id);
+        bookingToUpdate.setActive(Boolean.TRUE);
+        Passenger passenger1 = new Passenger();
+        passenger1.setSeatClass("first");
+        passenger1.setFlight(new Flight());
+        passenger1.getFlight().setReservedFirstClassSeatsCount(1);
+        Passenger passenger2 = new Passenger();
+        passenger2.setSeatClass("business");
+        passenger2.setFlight(new Flight());
+        passenger2.getFlight().setReservedFirstClassSeatsCount(1);
+        List<Passenger> passengers = Arrays.asList(passenger1, passenger2);
+        bookingToUpdate.setPassengers(passengers);
         when(bookingRepository.findById(id))
-                .thenReturn(Optional.of(new Booking()));
+                .thenReturn(Optional.of(bookingToUpdate));
+
+        Booking updatedBooking = objectMapper.readValue(
+                objectMapper.writeValueAsString(bookingToUpdate),
+                Booking.class);
+        when(bookingRepository.save(bookingToUpdate))
+                .thenReturn(updatedBooking);
+
+        String confirmationCode = "confirmation_code";
+        Boolean active = Boolean.FALSE;
+        Integer layoverCount = 0;
+        Double totalPrice = 1.01;
+        Booking newBooking = bookingService.update(id, confirmationCode, active,
+                layoverCount, totalPrice);
+
+        assertThat(newBooking, is(updatedBooking));
+        verify(passengerService, times(1)).decrementReservedSeatsCount(
+                passenger1.getSeatClass(), passenger1.getFlight());
+        verify(passengerService, times(1)).decrementReservedSeatsCount(
+                passenger2.getSeatClass(), passenger2.getFlight());
+    }
+
+    @Test
+    void deleteById_ValidId_BookingDeleted() {
+        Passenger passenger1 = new Passenger();
+        passenger1.setSeatClass("first");
+        passenger1.setFlight(new Flight());
+        passenger1.getFlight().setReservedFirstClassSeatsCount(0);
+        Passenger passenger2 = new Passenger();
+        passenger2.setSeatClass("business");
+        passenger2.setFlight(new Flight());
+        passenger2.getFlight().setReservedFirstClassSeatsCount(0);
+        Long id = 1L;
+        Booking bookingToDelete = new Booking();
+        bookingToDelete.setId(id);
+        bookingToDelete.setActive(Boolean.TRUE);
+        List<Passenger> passengers = Arrays.asList(passenger1, passenger2);
+        bookingToDelete.setPassengers(passengers);
+        when(bookingRepository.findById(id))
+                .thenReturn(Optional.of(bookingToDelete));
 
         bookingService.deleteById(id);
+
         verify(bookingRepository, times(1)).deleteById(id);
+        verify(passengerService, times(1)).decrementReservedSeatsCount(
+                passenger1.getSeatClass(), passenger1.getFlight());
+        verify(passengerService, times(1)).decrementReservedSeatsCount(
+                passenger2.getSeatClass(), passenger2.getFlight());
     }
 }

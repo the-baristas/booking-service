@@ -21,7 +21,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utopia.bookingservice.dto.PassengerCreationDto;
 import com.utopia.bookingservice.dto.PassengerResponseDto;
 import com.utopia.bookingservice.dto.PassengerUpdateDto;
+import com.utopia.bookingservice.entity.Airport;
+import com.utopia.bookingservice.entity.Booking;
+import com.utopia.bookingservice.entity.Discount;
+import com.utopia.bookingservice.entity.Flight;
 import com.utopia.bookingservice.entity.Passenger;
+import com.utopia.bookingservice.entity.Route;
+import com.utopia.bookingservice.entity.User;
 import com.utopia.bookingservice.service.PassengerService;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -207,26 +213,67 @@ public class PassengerControllerTest {
     public void updatePassenger_ValidPassenger_PassengerUpdated()
             throws JsonMappingException, JsonProcessingException {
         PassengerUpdateDto passengerUpdateDto = new PassengerUpdateDto();
-        passengerUpdateDto.setGivenName("Given-Name");
-        passengerUpdateDto.setFamilyName("Family-Name");
-        passengerUpdateDto.setDateOfBirth(LocalDate.of(2000, 1, 1));
-        passengerUpdateDto.setGender("other");
-        passengerUpdateDto.setAddress("1 Main St Origin City AK 12345");
-        passengerUpdateDto.setSeatClass("first");
-        passengerUpdateDto.setSeatNumber(1);
-        passengerUpdateDto.setCheckInGroup(1);
-        Passenger targetPassenger = modelMapper.map(passengerUpdateDto,
-                Passenger.class);
+        String givenName = "first_name";
+        passengerUpdateDto.setGivenName(givenName);
+        String familyName = "last_name";
+        passengerUpdateDto.setFamilyName(familyName);
+        LocalDate dateOfBirth = LocalDate.of(2000, 1, 1);
+        passengerUpdateDto.setDateOfBirth(dateOfBirth);
+        String gender = "nonbinary";
+        passengerUpdateDto.setGender(gender);
+        String address = "1 Main Street Test City, FL 12345";
+        passengerUpdateDto.setAddress(address);
+        String newSeatClass = "first";
+        passengerUpdateDto.setSeatClass(newSeatClass);
+        Integer seatNumber = 1;
+        passengerUpdateDto.setSeatNumber(seatNumber);
+        Integer checkInGroup = 1;
+        passengerUpdateDto.setCheckInGroup(checkInGroup);
+
         Passenger updatedPassenger = modelMapper.map(passengerUpdateDto,
                 Passenger.class);
-        Long id = 1L;
-        when(passengerService.update(id, targetPassenger))
-                .thenReturn(updatedPassenger);
+        Long passengerId = 1L;
+        updatedPassenger.setId(passengerId);
+        updatedPassenger.setBooking(new Booking());
+        updatedPassenger.getBooking().setId(1L);
+        updatedPassenger.getBooking().setActive(Boolean.TRUE);
+        updatedPassenger.getBooking().setConfirmationCode("a");
+        updatedPassenger.getBooking().setLayoverCount(0);
+        updatedPassenger.getBooking().setTotalPrice(0d);
+        updatedPassenger.setFlight(new Flight());
+        updatedPassenger.getFlight().setId(1L);
+        updatedPassenger.getFlight().setActive(Boolean.TRUE);
+        updatedPassenger.getFlight()
+                .setDepartureTime(LocalDateTime.of(2025, 1, 1, 1, 0, 0));
+        updatedPassenger.getFlight()
+                .setArrivalTime(LocalDateTime.of(2025, 1, 1, 2, 0, 0));
+        Route route = new Route();
+        route.setId(1L);
+        route.setActive(Boolean.TRUE);
+        route.setOriginAirport(new Airport());
+        route.getOriginAirport().setAirportCode("ABC");
+        route.getOriginAirport().setActive(Boolean.TRUE);
+        route.getOriginAirport().setCity("Origin City");
+        route.setDestinationAirport(new Airport());
+        route.getDestinationAirport().setAirportCode("ABC");
+        route.getDestinationAirport().setActive(Boolean.TRUE);
+        route.getDestinationAirport().setCity("Destination City");
+        updatedPassenger.getFlight().setRoute(route);
+        updatedPassenger.setDiscount(new Discount());
+        updatedPassenger.getDiscount().setDiscountType("none");
+        updatedPassenger.getDiscount().setDiscountRate(1d);
+        updatedPassenger.getBooking().setUser(new User());
+        updatedPassenger.getBooking().getUser().setUsername("username");
+        updatedPassenger.getBooking().getUser().setEmail("email@email.com");
+        updatedPassenger.getBooking().getUser().setPhone("5556667777");
+        when(passengerService.update(passengerId, givenName, familyName,
+                dateOfBirth, gender, address, newSeatClass, seatNumber,
+                checkInGroup)).thenReturn(updatedPassenger);
 
         PassengerResponseDto updatedPassengerDto = modelMapper
                 .map(updatedPassenger, PassengerResponseDto.class);
 
-        webTestClient.put().uri("/passengers/{id}", id)
+        webTestClient.put().uri("/passengers/{id}", passengerId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(passengerUpdateDto).exchange().expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)

@@ -21,9 +21,14 @@ import com.utopia.bookingservice.exception.ModelMapperFailedException;
 import com.utopia.bookingservice.propertymap.BookingCreationDtoMap;
 import com.utopia.bookingservice.propertymap.BookingMap;
 import com.utopia.bookingservice.propertymap.FlightMap;
+import com.utopia.bookingservice.repository.BookingRepository;
+import com.utopia.bookingservice.repository.FlightRepository;
+import com.utopia.bookingservice.repository.UserRepository;
+import com.utopia.bookingservice.security.JwtUtils;
 import com.utopia.bookingservice.service.BookingService;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -37,7 +42,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -73,7 +77,7 @@ public class BookingController {
     }
 
     @GetMapping
-    public @ResponseBody ResponseEntity<String> checkHealth() {
+    public ResponseEntity<String> checkHealth() {
         return ResponseEntity.ok("Health is OK.");
     }
 
@@ -129,9 +133,10 @@ public class BookingController {
         return ResponseEntity.ok(bookingDtosPage);
     }
 
-    private void checkUsernameRequestMatchesResponse(String jwtToken,
+    private void checkUsernameRequestMatchesResponse(String bearerToken,
             String responseUsername) throws ResponseStatusException {
         try {
+            String jwtToken = bearerToken.replace(JwtUtils.TOKEN_PREFIX, "");
             DecodedJWT jwt = JWT.decode(jwtToken);
             String username = jwt.getSubject();
 
@@ -170,9 +175,8 @@ public class BookingController {
                 .create(bookingCreationDto.getUsername(), bookingToCreate);
         BookingResponseDto createdBookingDto = convertToResponseDto(
                 createdBooking);
-        return ResponseEntity
-                .created(builder.path("/bookings/{id}")
-                        .build(createdBookingDto.getId()))
+        Long id = createdBookingDto.getId();
+        return ResponseEntity.created(builder.path("/bookings/{id}").build(id))
                 .body(createdBookingDto);
     }
 
@@ -182,7 +186,9 @@ public class BookingController {
             @Valid @RequestBody BookingUpdateDto bookingUpdateDto) {
         Booking targetBooking = modelMapper.map(bookingUpdateDto,
                 Booking.class);
-        Booking updatedBooking = bookingService.update(id, targetBooking);
+        Booking updatedBooking = bookingService.update(id,
+                targetBooking.getConfirmationCode(), targetBooking.getActive(),
+                targetBooking.getLayoverCount(), targetBooking.getTotalPrice());
         BookingResponseDto updatedBookingDto = convertToResponseDto(
                 updatedBooking);
         return ResponseEntity.ok(updatedBookingDto);

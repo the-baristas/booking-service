@@ -20,4 +20,13 @@ public class Airplane {
 
     @Column(name = "model")
     private String model;
+
+    @Column(name = "max_first")
+    private Integer maxFirstClassSeatsCount;
+
+    @Column(name = "max_business")
+    private Integer maxBusinessClassSeatsCount;
+
+    @Column(name = "max_economy")
+    private Integer maxEconomyClassSeatsCount;
 }
