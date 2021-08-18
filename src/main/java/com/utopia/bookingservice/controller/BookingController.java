@@ -141,14 +141,9 @@ public class BookingController {
             String username = jwt.getSubject();
 
             Claim claim = jwt.getClaim("authorities");
+            @SuppressWarnings("rawtypes") List<HashMap> authorities = claim.asList(HashMap.class);
             System.out.printf("Claim is null: %s%n", claim.isNull());
-            List<String> list = claim.asList(String.class);
-            String rolesMapString = list.get(0);
-            TypeReference<HashMap<String, String>> typeRef = new TypeReference<HashMap<String, String>>() {
-            };
-            Map<String, String> map = new ObjectMapper()
-                    .readValue(rolesMapString, typeRef);
-            String role = map.get("authority");
+            String role = (String) authorities.get(0).get("authority");
 
             if (!role.contains("ADMIN") && !username.equals(responseUsername)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN,
@@ -157,9 +152,6 @@ public class BookingController {
         } catch (JWTDecodeException exception) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
                     "JWT decoding failed.", exception);
-        } catch (JsonProcessingException exception) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
-                    "ObjectMapper failed.", exception);
         }
     }
 
