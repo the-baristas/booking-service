@@ -133,36 +133,6 @@ public class BookingController {
         return ResponseEntity.ok(bookingDtosPage);
     }
 
-    private void checkUsernameRequestMatchesResponse(String bearerToken,
-            String responseUsername) throws ResponseStatusException {
-        try {
-            String jwtToken = bearerToken.replace(JwtUtils.TOKEN_PREFIX, "");
-            DecodedJWT jwt = JWT.decode(jwtToken);
-            String username = jwt.getSubject();
-
-            Claim claim = jwt.getClaim("authorities");
-            System.out.printf("Claim is null: %s%n", claim.isNull());
-            List<String> list = claim.asList(String.class);
-            String rolesMapString = list.get(0);
-            TypeReference<HashMap<String, String>> typeRef = new TypeReference<HashMap<String, String>>() {
-            };
-            Map<String, String> map = new ObjectMapper()
-                    .readValue(rolesMapString, typeRef);
-            String role = map.get("authority");
-
-            if (!role.contains("ADMIN") && !username.equals(responseUsername)) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                        "Only admins can access another user's information.");
-            }
-        } catch (JWTDecodeException exception) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
-                    "JWT decoding failed.", exception);
-        } catch (JsonProcessingException exception) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
-                    "ObjectMapper failed.", exception);
-        }
-    }
-
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
     @PostMapping("bookings")
     public ResponseEntity<BookingResponseDto> create(
@@ -180,7 +150,7 @@ public class BookingController {
                 .body(createdBookingDto);
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
     @PutMapping("bookings/{id}")
     public ResponseEntity<BookingResponseDto> update(@PathVariable Long id,
             @Valid @RequestBody BookingUpdateDto bookingUpdateDto) {
@@ -202,7 +172,42 @@ public class BookingController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
+    @GetMapping("bookings/email/{confirmationCode}")
+    public ResponseEntity<Void> sendBookingEmail(@PathVariable String confirmationCode, @RequestHeader("Authorization") String bearerToken){
+
+        Booking booking = bookingService.findByConfirmationCode(confirmationCode);
+
+        checkUsernameRequestMatchesResponse(bearerToken, booking.getUser().getUsername());
+
+        bookingService.sendEmail(booking);
+
+        return ResponseEntity.ok().build();
+    }
+
     private BookingResponseDto convertToResponseDto(Booking booking) {
         return modelMapper.map(booking, BookingResponseDto.class);
+    }
+
+    private void checkUsernameRequestMatchesResponse(String bearerToken,
+                                                     String responseUsername) throws ResponseStatusException {
+        try {
+            String jwtToken = bearerToken.replace(JwtUtils.TOKEN_PREFIX, "");
+            DecodedJWT jwt = JWT.decode(jwtToken);
+            String username = jwt.getSubject();
+
+            Claim claim = jwt.getClaim("authorities");
+            @SuppressWarnings("rawtypes") List<HashMap> authorities = claim.asList(HashMap.class);
+            System.out.printf("Claim is null: %s%n", claim.isNull());
+            String role = (String) authorities.get(0).get("authority");
+
+            if (!role.contains("ADMIN") && !username.equals(responseUsername)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Only admins can access another user's information.");
+            }
+        } catch (JWTDecodeException exception) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "JWT decoding failed.", exception);
+        }
     }
 }
