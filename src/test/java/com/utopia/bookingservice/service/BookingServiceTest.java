@@ -13,6 +13,7 @@ import java.util.Optional;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.utopia.bookingservice.email.EmailSender;
 import com.utopia.bookingservice.entity.Booking;
 import com.utopia.bookingservice.entity.Flight;
 import com.utopia.bookingservice.entity.Passenger;
@@ -41,6 +42,9 @@ class BookingServiceTest {
 
     @Mock
     private PassengerService passengerService;
+
+    @Mock
+    private EmailSender emailSender;
 
     @InjectMocks
     private BookingService bookingService;

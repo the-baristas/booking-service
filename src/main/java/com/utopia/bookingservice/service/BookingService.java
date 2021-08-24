@@ -2,6 +2,7 @@ package com.utopia.bookingservice.service;
 
 import java.util.List;
 
+import com.utopia.bookingservice.email.EmailSender;
 import com.utopia.bookingservice.entity.Booking;
 import com.utopia.bookingservice.entity.Passenger;
 import com.utopia.bookingservice.entity.User;
@@ -23,6 +24,7 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final PassengerService passengerService;
+    private final EmailSender emailSender;
 
     public Page<Booking> findAll(Integer pageIndex, Integer pageSize) {
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
@@ -104,6 +106,10 @@ public class BookingService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Could not delete booking with id: " + id, e);
         }
+    }
+
+    public void sendEmail(Booking booking){
+        emailSender.sendBookingDetails(booking);
     }
 
     private void decrementReservedSeatsCounts(List<Passenger> passengers) {
