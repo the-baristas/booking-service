@@ -275,4 +275,12 @@ public class BookingControllerTest {
                 confirmationCode).header("Authorization", jwtToken)
                 .exchange().expectStatus().isOk();
     }
+
+    @Test
+    @WithMockUser(authorities = {"ROLE_ADMIN"})
+    public void refundBooking_Success(){
+        webTestClient.put().uri(
+                "/bookings/refund?id=1&refundAmount=20.00").header("Authorization", jwtToken)
+                .exchange().expectStatus().isOk();
+    }
 }
