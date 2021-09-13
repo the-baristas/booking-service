@@ -13,6 +13,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.stripe.exception.StripeException;
 import com.utopia.bookingservice.dto.BookingCreationDto;
 import com.utopia.bookingservice.dto.BookingResponseDto;
 import com.utopia.bookingservice.dto.BookingUpdateDto;
@@ -34,15 +35,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -184,6 +177,14 @@ public class BookingController {
 
         return ResponseEntity.ok().build();
     }
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
+    @PutMapping("bookings/refund")
+    public ResponseEntity<BookingResponseDto> refundBooking(@RequestParam("id") Long bookingId,
+                                                            @RequestParam("refundAmount") Float refundAmount) throws StripeException {
+        bookingService.refundBooking(bookingId, refundAmount.longValue());
+        return ResponseEntity.ok().build();
+    }
+
 
     private BookingResponseDto convertToResponseDto(Booking booking) {
         return modelMapper.map(booking, BookingResponseDto.class);
@@ -209,5 +210,10 @@ public class BookingController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
                     "JWT decoding failed.", exception);
         }
+    }
+
+    @ExceptionHandler(StripeException.class)
+    public String handleError(StripeException e) {
+        return e.getMessage();
     }
 }
