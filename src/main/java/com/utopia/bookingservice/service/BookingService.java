@@ -80,7 +80,9 @@ public class BookingService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Could not find booking with id: " + id));
         Boolean currentActive = bookingToUpdate.getActive();
-        if (currentActive && !newActive) {
+        if (!currentActive && newActive) {
+            incrementReservedSeatsCounts(bookingToUpdate.getPassengers());
+        } else if (currentActive && !newActive) {
             decrementReservedSeatsCounts(bookingToUpdate.getPassengers());
         }
         bookingToUpdate.setConfirmationCode(confirmationCode);
@@ -108,8 +110,15 @@ public class BookingService {
         }
     }
 
-    public void sendEmail(Booking booking){
+    public void sendEmail(Booking booking) {
         emailSender.sendBookingDetails(booking);
+    }
+
+    private void incrementReservedSeatsCounts(List<Passenger> passengers) {
+        for (Passenger passenger : passengers) {
+            passengerService.incrementReservedSeatsCount(
+                    passenger.getSeatClass(), passenger.getFlight());
+        }
     }
 
     private void decrementReservedSeatsCounts(List<Passenger> passengers) {
