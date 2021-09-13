@@ -2,6 +2,9 @@ package com.utopia.bookingservice.service;
 
 import java.util.List;
 
+import javax.transaction.Transactional;
+
+import com.stripe.exception.StripeException;
 import com.utopia.bookingservice.email.EmailSender;
 import com.utopia.bookingservice.entity.Booking;
 import com.utopia.bookingservice.entity.Passenger;
@@ -25,6 +28,7 @@ public class BookingService {
     private final UserRepository userRepository;
     private final PassengerService passengerService;
     private final EmailSender emailSender;
+    private final PaymentService paymentService;
 
     public Page<Booking> findAll(Integer pageIndex, Integer pageSize) {
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
@@ -74,6 +78,7 @@ public class BookingService {
         }
     }
 
+    @Transactional
     public Booking update(Long id, String confirmationCode, Boolean newActive,
             Integer layoverCount, Double totalPrice) {
         Booking bookingToUpdate = bookingRepository.findById(id).orElseThrow(
@@ -112,6 +117,23 @@ public class BookingService {
 
     public void sendEmail(Booking booking) {
         emailSender.sendBookingDetails(booking);
+    }
+
+    @Transactional
+    public void refundBooking(Long bookingId, Long refundAmount)
+            throws StripeException {
+        // get booking by id
+        Booking booking = bookingRepository.findById(bookingId).get();
+
+        // if the booking is already refunded, do nothing
+        if (booking.getPayment().isRefunded())
+            return;
+
+        update(bookingId, booking.getConfirmationCode(), false,
+                booking.getLayoverCount(), booking.getTotalPrice());
+
+        // call paymentService to refund stripe payment
+        paymentService.refundPayment(booking.getPayment(), refundAmount);
     }
 
     private void incrementReservedSeatsCounts(List<Passenger> passengers) {

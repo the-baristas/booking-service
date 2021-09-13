@@ -9,6 +9,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.stripe.exception.StripeException;
 import com.utopia.bookingservice.dto.BookingCreationDto;
 import com.utopia.bookingservice.dto.BookingResponseDto;
 import com.utopia.bookingservice.dto.BookingUpdateDto;
@@ -27,6 +28,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -180,6 +182,14 @@ public class BookingController {
 
         return ResponseEntity.ok().build();
     }
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
+    @PutMapping("bookings/refund")
+    public ResponseEntity<BookingResponseDto> refundBooking(@RequestParam("id") Long bookingId,
+                                                            @RequestParam("refundAmount") Float refundAmount) throws StripeException {
+        bookingService.refundBooking(bookingId, refundAmount.longValue());
+        return ResponseEntity.ok().build();
+    }
+
 
     private BookingResponseDto convertToResponseDto(Booking booking) {
         return modelMapper.map(booking, BookingResponseDto.class);
@@ -204,5 +214,10 @@ public class BookingController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
                     "JWT decoding failed.", exception);
         }
+    }
+
+    @ExceptionHandler(StripeException.class)
+    public String handleError(StripeException e) {
+        return e.getMessage();
     }
 }

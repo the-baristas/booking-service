@@ -55,6 +55,10 @@ intent.
 
   Email a user information about their booking
 
+- [PUT /bookings/refund](#put-bookingsrefund)
+
+  Cancel and refund a booking.
+
 - [GET /passengers](#get-passengers)
 
   Get a page of passengers.
@@ -524,6 +528,13 @@ id (integer)
 ### Parameters:
 
 confirmationCode (string)
+
+## PUT /bookings/refund
+
+### Parameters:
+
+id (integer)
+refundAmount (float)
 
 ## GET /passengers
 
