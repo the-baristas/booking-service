@@ -2,6 +2,8 @@ package com.utopia.bookingservice.service;
 
 import java.util.List;
 
+import javax.transaction.Transactional;
+
 import com.stripe.exception.StripeException;
 import com.utopia.bookingservice.email.EmailSender;
 import com.utopia.bookingservice.entity.Booking;
@@ -18,8 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
-
-import javax.transaction.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -85,7 +85,9 @@ public class BookingService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Could not find booking with id: " + id));
         Boolean currentActive = bookingToUpdate.getActive();
-        if (currentActive && !newActive) {
+        if (!currentActive && newActive) {
+            incrementReservedSeatsCounts(bookingToUpdate.getPassengers());
+        } else if (currentActive && !newActive) {
             decrementReservedSeatsCounts(bookingToUpdate.getPassengers());
         }
         bookingToUpdate.setConfirmationCode(confirmationCode);
@@ -113,24 +115,32 @@ public class BookingService {
         }
     }
 
-    public void sendEmail(Booking booking){
+    public void sendEmail(Booking booking) {
         emailSender.sendBookingDetails(booking);
     }
 
     @Transactional
-    public void refundBooking(Long bookingId, Long refundAmount) throws StripeException {
-        //get booking by id
+    public void refundBooking(Long bookingId, Long refundAmount)
+            throws StripeException {
+        // get booking by id
         Booking booking = bookingRepository.findById(bookingId).get();
 
-        //if the booking is already refunded, do nothing
-        if(booking.getPayment().isRefunded())
+        // if the booking is already refunded, do nothing
+        if (booking.getPayment().isRefunded())
             return;
 
-        update(bookingId, booking.getConfirmationCode(),
-                false, booking.getLayoverCount(), booking.getTotalPrice());
+        update(bookingId, booking.getConfirmationCode(), false,
+                booking.getLayoverCount(), booking.getTotalPrice());
 
-        //call paymentService to refund stripe payment
+        // call paymentService to refund stripe payment
         paymentService.refundPayment(booking.getPayment(), refundAmount);
+    }
+
+    private void incrementReservedSeatsCounts(List<Passenger> passengers) {
+        for (Passenger passenger : passengers) {
+            passengerService.incrementReservedSeatsCount(
+                    passenger.getSeatClass(), passenger.getFlight());
+        }
     }
 
     private void decrementReservedSeatsCounts(List<Passenger> passengers) {
