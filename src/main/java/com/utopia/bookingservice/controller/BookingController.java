@@ -215,7 +215,6 @@ public class BookingController {
             Claim claim = jwt.getClaim("authorities");
 
             @SuppressWarnings("rawtypes") List<HashMap> authorities = claim.asList(HashMap.class);
-            List<HashMap> authorities = claim.asList(HashMap.class);
             String role = (String) authorities.get(0).get("authority");
 
             if (!role.contains("ADMIN") && !username.equals(responseUsername)) {

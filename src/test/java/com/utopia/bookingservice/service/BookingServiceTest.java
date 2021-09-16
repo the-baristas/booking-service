@@ -16,15 +16,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utopia.bookingservice.email.EmailSender;
-import com.utopia.bookingservice.entity.Booking;
-import com.utopia.bookingservice.entity.Flight;
-import com.utopia.bookingservice.entity.Passenger;
-import com.utopia.bookingservice.entity.User;
+import com.utopia.bookingservice.entity.*;
 import com.utopia.bookingservice.repository.BookingRepository;
 import com.utopia.bookingservice.repository.UserRepository;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.engine.JupiterTestEngine;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,6 +32,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.junit.jupiter.api.Assertions.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceTest {
@@ -278,5 +279,29 @@ class BookingServiceTest {
                 passenger1.getSeatClass(), passenger1.getFlight());
         verify(passengerService, times(1)).decrementReservedSeatsCount(
                 passenger2.getSeatClass(), passenger2.getFlight());
+    }
+
+    @Test
+    public void deleteById_Invalid(){
+        Assertions.assertThrows(ResponseStatusException.class, () -> {bookingService.deleteById(1L);});
+    }
+
+    @Test
+    public void sendEmail(){
+        Assertions.assertDoesNotThrow(() -> {bookingService.sendEmail(new Booking());});
+    }
+
+    @Test
+    public void refund_bookingAlreadyRefunded(){
+        Booking booking = new Booking();
+        booking.setId(1L);
+        Payment payment = new Payment();
+        payment.setRefunded(true);
+        booking.setPayment(payment);
+
+        when(bookingRepository.findById(booking.getId()))
+                .thenReturn(Optional.of(booking));
+
+        Assertions.assertDoesNotThrow(() -> {bookingService.refundBooking(booking.getId(), 100L);});
     }
 }
