@@ -2,7 +2,6 @@ package com.utopia.bookingservice.controller;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.validation.Valid;
 
@@ -10,9 +9,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.exception.StripeException;
 import com.utopia.bookingservice.dto.BookingCreationDto;
 import com.utopia.bookingservice.dto.BookingResponseDto;
@@ -22,20 +18,25 @@ import com.utopia.bookingservice.exception.ModelMapperFailedException;
 import com.utopia.bookingservice.propertymap.BookingCreationDtoMap;
 import com.utopia.bookingservice.propertymap.BookingMap;
 import com.utopia.bookingservice.propertymap.FlightMap;
-import com.utopia.bookingservice.repository.BookingRepository;
-import com.utopia.bookingservice.repository.FlightRepository;
-import com.utopia.bookingservice.repository.UserRepository;
 import com.utopia.bookingservice.security.JwtUtils;
 import com.utopia.bookingservice.service.BookingService;
 
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -177,11 +178,15 @@ public class BookingController {
 
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
     @GetMapping("bookings/email/{confirmationCode}")
-    public ResponseEntity<Void> sendBookingEmail(@PathVariable String confirmationCode, @RequestHeader("Authorization") String bearerToken){
+    public ResponseEntity<Void> sendBookingEmail(
+            @PathVariable String confirmationCode,
+            @RequestHeader("Authorization") String bearerToken) {
 
-        Booking booking = bookingService.findByConfirmationCode(confirmationCode);
+        Booking booking = bookingService
+                .findByConfirmationCode(confirmationCode);
 
-        checkUsernameRequestMatchesResponse(bearerToken, booking.getUser().getUsername());
+        checkUsernameRequestMatchesResponse(bearerToken,
+                booking.getUser().getUsername());
 
         bookingService.sendEmail(booking);
 
@@ -201,14 +206,16 @@ public class BookingController {
     }
 
     private void checkUsernameRequestMatchesResponse(String bearerToken,
-                                                     String responseUsername) throws ResponseStatusException {
+            String responseUsername) throws ResponseStatusException {
         try {
             String jwtToken = bearerToken.replace(JwtUtils.TOKEN_PREFIX, "");
             DecodedJWT jwt = JWT.decode(jwtToken);
             String username = jwt.getSubject();
 
             Claim claim = jwt.getClaim("authorities");
+
             @SuppressWarnings("rawtypes") List<HashMap> authorities = claim.asList(HashMap.class);
+            List<HashMap> authorities = claim.asList(HashMap.class);
             String role = (String) authorities.get(0).get("authority");
 
             if (!role.contains("ADMIN") && !username.equals(responseUsername)) {

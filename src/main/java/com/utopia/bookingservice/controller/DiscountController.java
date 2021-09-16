@@ -1,18 +1,21 @@
 package com.utopia.bookingservice.controller;
 
+import javax.validation.Valid;
+
 import com.utopia.bookingservice.dto.DiscountDto;
-import com.utopia.bookingservice.dto.PaymentDto;
 import com.utopia.bookingservice.entity.Discount;
-import com.utopia.bookingservice.entity.Payment;
 import com.utopia.bookingservice.service.DiscountService;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-
-import javax.validation.Valid;
-import java.text.ParseException;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(path = "/discounts")
