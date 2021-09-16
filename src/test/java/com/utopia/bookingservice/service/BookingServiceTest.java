@@ -6,7 +6,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -126,6 +128,37 @@ class BookingServiceTest {
         Page<Booking> returnedBookingsPage = bookingService
                 .findByUsername(username, pageIndex, pageSize);
         assertThat(returnedBookingsPage, is(foundBookingsPage));
+    }
+
+    @Test
+    void findPendingFlightsByUsername_ValidUsername_BookingFound(){
+        String username = "username";
+        Booking bookingAfter = new Booking();
+        bookingAfter.setActive(true);
+        Flight flightAfter = new Flight();
+        flightAfter.setDepartureTime(LocalDateTime.now().plusDays(33L) );
+        HashSet<Flight> flightsAfter = new HashSet<>();
+        flightsAfter.add(flightAfter);
+        bookingAfter.setFlights(flightsAfter);
+
+        Booking bookingBefore = new Booking();
+        bookingBefore.setActive(true);
+        Flight flightBefore = new Flight();
+        flightBefore.setDepartureTime(LocalDateTime.now().minusDays(33L) );
+        HashSet<Flight> flightsBefore = new HashSet<>();
+        flightsBefore.add(flightBefore);
+        bookingBefore.setFlights(flightsBefore);
+
+        List<Booking> bookings = Arrays.asList(bookingAfter, bookingBefore);
+
+        Integer pageIndex = 0;
+        Integer pageSize = 1;
+        when(bookingRepository.findAllByUsername(username))
+                .thenReturn(bookings);
+
+        Page<Booking> returnedBookingsPage = bookingService
+                .findPendingFlightsByUsername(username, pageIndex, pageSize);
+        assertThat(returnedBookingsPage.getTotalElements(), is(bookings.size()-1L));
     }
 
     @Test

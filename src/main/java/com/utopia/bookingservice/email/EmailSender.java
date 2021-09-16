@@ -43,9 +43,11 @@ public class EmailSender {
                                 + "<p>Departing from: " + passenger.getFlight().getRoute().getOriginAirport().getCity()
                                 + " [" + passenger.getFlight().getRoute().getOriginAirport().getAirportCode() + "]"
                                 + " (" + passenger.getFlight().getDepartureTime().toString().replace('T', ' ') + ")</p>"
+                                + " (Gate: " + passenger.getFlight().getDepartureGate() + ")"
                                 + "<p>Arriving at: " + passenger.getFlight().getRoute().getDestinationAirport().getCity()
                                 + " [" + passenger.getFlight().getRoute().getDestinationAirport().getAirportCode() + "]"
-                                + " (" + passenger.getFlight().getArrivalTime().toString().replace('T', ' ') + ")\n</p>"
+                                + " (" + passenger.getFlight().getArrivalTime().toString().replace('T', ' ')
+                                + " (Gate: " + passenger.getFlight().getArrivalGate() + ")" + ")\n</p>"
                                 + "--------------------------------------------------------------------\n"
                     );
         });

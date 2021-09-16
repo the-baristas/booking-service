@@ -1,5 +1,7 @@
 package com.utopia.bookingservice.entity;
 
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -61,4 +63,8 @@ public class Booking {
 
     @OneToOne(mappedBy = "booking")
     private Payment payment;
+
+    public Flight findEarliestDepartingFlight(){
+        return flights.stream().min(Comparator.comparing(Flight::getDepartureTime)).get();
+    }
 }
