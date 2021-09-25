@@ -21,6 +21,12 @@ public class User {
     @Column(name = "id")
     private Long id;
 
+    @Column(name = "given_name")
+    private String givenName;
+
+    @Column(name = "family_name")
+    private String familyName;
+
     @Column(name = "username")
     private String username;
 
