@@ -55,6 +55,9 @@ public class BookingService {
 
     public Page<Booking> findByUsername(String username, Integer pageIndex,
             Integer pageSize) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "A user with this username does not exist: " + username));
+
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
         try {
             return bookingRepository.findByUsername(username, pageable);
@@ -65,6 +68,9 @@ public class BookingService {
     }
 
     public Page<Booking> findByUsername(String username, String searchTerm, Integer pageIndex, Integer pageSize){
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "A user with this username does not exist: " + username));
+
         try {
             //get all the bookings made by this username, then filter it based on the search term.
             //a booking will be returned if any passenger's name in the booking contains the search term
@@ -87,7 +93,11 @@ public class BookingService {
     }
 
     public Page<Booking> findPendingFlightsByUsername(String username, Integer pageIndex, Integer pageSize){
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "A user with this username does not exist: " + username));
+
         try {
+
             LocalDateTime now = LocalDateTime.now();
             List<Booking> allPendingBookings = bookingRepository.findAllByUsername(username)
                     .stream().filter(
@@ -105,6 +115,9 @@ public class BookingService {
     }
 
     public Page<Booking> findPendingFlightsByUsername(String username, String searchTerm, Integer pageIndex, Integer pageSize){
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "A user with this username does not exist: " + username));
+
         try {
             LocalDateTime now = LocalDateTime.now();
             List<Booking> allPendingBookings = bookingRepository.findAllByUsername(username)

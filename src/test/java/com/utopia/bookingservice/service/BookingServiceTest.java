@@ -122,6 +122,8 @@ class BookingServiceTest {
                 Arrays.asList(new Booking()));
         Integer pageIndex = 0;
         Integer pageSize = 1;
+        when(userRepository.findByUsername("username"))
+                .thenReturn(Optional.of(new User()));
         when(bookingRepository.findByUsername(username,
                 PageRequest.of(pageIndex, pageSize)))
                         .thenReturn(foundBookingsPage);
@@ -156,6 +158,8 @@ class BookingServiceTest {
         Integer pageSize = 1;
         when(bookingRepository.findAllByUsername(username))
                 .thenReturn(bookings);
+        when(userRepository.findByUsername("username"))
+                .thenReturn(Optional.of(new User()));
 
         Page<Booking> returnedBookingsPage = bookingService
                 .findPendingFlightsByUsername(username, pageIndex, pageSize);
@@ -179,6 +183,8 @@ class BookingServiceTest {
         Integer pageSize = 1;
         when(bookingRepository.findAllByUsername(username))
                 .thenReturn(bookings);
+        when(userRepository.findByUsername("username"))
+                .thenReturn(Optional.of(new User()));
 
         Page<Booking> returnedBookingsPage = bookingService
                 .findByUsername(username, searchTerm, pageIndex, pageSize);
@@ -220,6 +226,8 @@ class BookingServiceTest {
         Integer pageSize = 1;
         when(bookingRepository.findAllByUsername(username))
                 .thenReturn(bookings);
+        when(userRepository.findByUsername("username"))
+                .thenReturn(Optional.of(new User()));
 
         Page<Booking> returnedBookingsPage = bookingService
                 .findPendingFlightsByUsername(username, searchTerm, pageIndex, pageSize);
