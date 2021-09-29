@@ -51,6 +51,14 @@ intent.
 
   Delete a booking.
 
+- [GET /bookings/email/{confirmationCode}](#email-booking)
+
+  Email a user information about their booking
+
+- [PUT /bookings/refund](#put-bookingsrefund)
+
+  Cancel and refund a booking.
+
 - [GET /passengers](#get-passengers)
 
   Get a page of passengers.
@@ -515,6 +523,19 @@ id (integer)
 
 id (integer)
 
+## GET /bookings/email/{confirmationCode}
+
+### Parameters:
+
+confirmationCode (string)
+
+## PUT /bookings/refund
+
+### Parameters:
+
+id (integer)
+refundAmount (float)
+
 ## GET /passengers
 
 ### Parameters:
@@ -890,6 +911,8 @@ size (integer)
     JWT_SECRET_KEY
 
     STRIPE_SECRET_KEY
+
+    AWS_EMAIL_SENDER
 
 ### Development
 

@@ -2,6 +2,10 @@ package com.utopia.bookingservice.service;
 
 import java.util.List;
 
+import javax.transaction.Transactional;
+
+import com.stripe.exception.StripeException;
+import com.utopia.bookingservice.email.EmailSender;
 import com.utopia.bookingservice.entity.Booking;
 import com.utopia.bookingservice.entity.Passenger;
 import com.utopia.bookingservice.entity.User;
@@ -23,6 +27,8 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final PassengerService passengerService;
+    private final EmailSender emailSender;
+    private final PaymentService paymentService;
 
     public Page<Booking> findAll(Integer pageIndex, Integer pageSize) {
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
@@ -72,13 +78,16 @@ public class BookingService {
         }
     }
 
+    @Transactional
     public Booking update(Long id, String confirmationCode, Boolean newActive,
             Integer layoverCount, Double totalPrice) {
         Booking bookingToUpdate = bookingRepository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Could not find booking with id: " + id));
         Boolean currentActive = bookingToUpdate.getActive();
-        if (currentActive && !newActive) {
+        if (!currentActive && newActive) {
+            incrementReservedSeatsCounts(bookingToUpdate.getPassengers());
+        } else if (currentActive && !newActive) {
             decrementReservedSeatsCounts(bookingToUpdate.getPassengers());
         }
         bookingToUpdate.setConfirmationCode(confirmationCode);
@@ -103,6 +112,34 @@ public class BookingService {
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Could not delete booking with id: " + id, e);
+        }
+    }
+
+    public void sendEmail(Booking booking) {
+        emailSender.sendBookingDetails(booking);
+    }
+
+    @Transactional
+    public void refundBooking(Long bookingId, Long refundAmount)
+            throws StripeException {
+        // get booking by id
+        Booking booking = bookingRepository.findById(bookingId).get();
+
+        // if the booking is already refunded, do nothing
+        if (booking.getPayment().isRefunded())
+            return;
+
+        update(bookingId, booking.getConfirmationCode(), false,
+                booking.getLayoverCount(), booking.getTotalPrice());
+
+        // call paymentService to refund stripe payment
+        paymentService.refundPayment(booking.getPayment(), refundAmount);
+    }
+
+    private void incrementReservedSeatsCounts(List<Passenger> passengers) {
+        for (Passenger passenger : passengers) {
+            passengerService.incrementReservedSeatsCount(
+                    passenger.getSeatClass(), passenger.getFlight());
         }
     }
 

@@ -8,6 +8,8 @@ import javax.transaction.Transactional;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
+import com.stripe.model.Refund;
+import com.stripe.param.RefundCreateParams;
 import com.utopia.bookingservice.entity.Payment;
 import com.utopia.bookingservice.repository.PaymentRepository;
 
@@ -36,12 +38,25 @@ public class PaymentService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
+    @Transactional
     public Payment createPayment(Payment payment) {
         try {
             return paymentRepository.save(payment);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Could not create payment for booking with id: "
+                            + payment.getBooking().getId(),
+                    e);
+        }
+    }
+
+    @Transactional
+    public Payment updatePayment(Payment payment){
+        try {
+            return paymentRepository.save(payment);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Could not update payment for booking with id: "
                             + payment.getBooking().getId(),
                     e);
         }
@@ -59,6 +74,17 @@ public class PaymentService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Could not delete payment with stripe ID: " + stripeId, e);
         }
+    }
+
+    @Transactional
+    public void refundPayment(Payment payment, Long refundAmount) throws StripeException {
+        String paymentIntentId = payment.getStripeId().split("_secret_")[0];
+        payment.setRefunded(true);
+        updatePayment(payment);
+        Refund refund = Refund.create(RefundCreateParams.builder()
+                .setAmount(refundAmount)
+                .setPaymentIntent(paymentIntentId)
+                .build());
     }
 
     public PaymentIntent createPaymentIntent(Map<String, Object> paymentInfo)

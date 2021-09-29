@@ -182,7 +182,7 @@ public class PassengerService {
         }
     }
 
-    private void incrementReservedSeatsCount(String seatClass, Flight flight) {
+    public void incrementReservedSeatsCount(String seatClass, Flight flight) {
         switch (seatClass) {
             case FIRST_CLASS: {
                 Integer reservedSeatsCount = flight
@@ -257,8 +257,8 @@ public class PassengerService {
                             reservedSeatsCount - 1);
                 } else {
                     String reason = String.format(
-                            "There are %s reserved seats in first class.",
-                            reservedSeatsCount);
+                            "There are %s reserved seats in first class in flight with id=%s",
+                            reservedSeatsCount, flight.getId());
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                             reason);
                 }

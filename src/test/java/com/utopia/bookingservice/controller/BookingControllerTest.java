@@ -19,6 +19,7 @@ import com.utopia.bookingservice.dto.BookingCreationDto;
 import com.utopia.bookingservice.dto.BookingResponseDto;
 import com.utopia.bookingservice.dto.BookingUpdateDto;
 import com.utopia.bookingservice.entity.Booking;
+import com.utopia.bookingservice.entity.User;
 import com.utopia.bookingservice.service.BookingService;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -67,9 +68,7 @@ public class BookingControllerTest {
         Map<String, String> authorityMap = new HashMap<>();
         authorityMap.put("authority", "ROLE_ADMIN");
         jwtToken = JWT.create().withSubject("username")
-                .withClaim("authorities",
-                        Arrays.asList(
-                                objectMapper.writeValueAsString(authorityMap)))
+                .withClaim("authorities", Arrays.asList(authorityMap))
                 .withExpiresAt(new Date(System.currentTimeMillis() + 900_000))
                 .sign(Algorithm.HMAC512(jwtSecretKey.getBytes()));
     }
@@ -247,5 +246,41 @@ public class BookingControllerTest {
         webTestClient.delete().uri("/bookings/{id}", id).exchange()
                 .expectStatus().isNoContent();
         verify(bookingService, times(1)).deleteById(id);
+    }
+
+    @Test
+    @WithMockUser(authorities = { "ROLE_ADMIN" })
+    public void sendBookingEmail_Success()
+            throws JsonProcessingException {
+        Booking foundBooking = new Booking();
+
+        Long id = 1L;
+        foundBooking.setId(id);
+        foundBooking.setActive(Boolean.TRUE);
+        String confirmationCode = "confirmation_code";
+        foundBooking.setConfirmationCode(confirmationCode);
+        foundBooking.setLayoverCount(0);
+        foundBooking.setTotalPrice(10.01);
+        String username = "username";
+        User foundUser = new User();
+        foundUser.setUsername(username);
+        foundBooking.setUser(foundUser);
+        Page<Booking> foundBookingsPage = new PageImpl<Booking>(
+                Arrays.asList(foundBooking));
+        when(bookingService.findByConfirmationCode(foundBooking.getConfirmationCode()))
+                .thenReturn(foundBooking);
+
+        webTestClient.get().uri(
+                "/bookings/email/{confirmationCode}",
+                confirmationCode).header("Authorization", jwtToken)
+                .exchange().expectStatus().isOk();
+    }
+
+    @Test
+    @WithMockUser(authorities = {"ROLE_ADMIN"})
+    public void refundBooking_Success(){
+        webTestClient.put().uri(
+                "/bookings/refund?id=1&refundAmount=20.00").header("Authorization", jwtToken)
+                .exchange().expectStatus().isOk();
     }
 }

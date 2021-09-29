@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +14,9 @@ import java.util.Optional;
 
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
+import com.stripe.model.Refund;
+import com.stripe.param.RefundCreateParams;
+import com.utopia.bookingservice.entity.Booking;
 import com.utopia.bookingservice.entity.Payment;
 import com.utopia.bookingservice.repository.PaymentRepository;
 
@@ -41,6 +45,17 @@ public class PaymentServiceTest {
 
         Payment foundPayment = paymentService.findByStripeId(stripeId);
         assertThat(foundPayment, is(paymentOptional.get()));
+    }
+
+    @Test
+    public void updatePayment_Error(){
+        Payment payment = new Payment();
+        Booking booking = new Booking();
+        booking.setId(1L);
+        payment.setBooking(booking);
+        when(paymentRepository.save(payment))
+                .thenThrow(IllegalArgumentException.class);
+        assertThrows(ResponseStatusException.class, () -> paymentService.updatePayment(payment));
     }
 
     @Test
