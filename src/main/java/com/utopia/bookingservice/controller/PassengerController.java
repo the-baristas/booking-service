@@ -2,6 +2,8 @@ package com.utopia.bookingservice.controller;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.validation.Valid;
 
@@ -149,6 +151,20 @@ public class PassengerController {
     public ResponseEntity<Void> deleteById(@PathVariable Long id) {
         passengerService.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/get-by-flight-id")
+    public ResponseEntity<List<Passenger>> findByFlightId(@PathVariable Long flightId) {
+        List<Passenger> passengers = passengerService.getPassengersByFlightId(flightId);
+        return ResponseEntity.ok(passengers);
+    }
+
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
+    @GetMapping("/taken-seats")
+    public List<Integer> getTakenSeats(@RequestParam Long flightId) {
+        System.out.println(flightId);
+        System.out.println(passengerService.getTakenSeats(flightId));
+        return passengerService.getTakenSeats(flightId);
     }
 
     private PassengerResponseDto convertToResponseDto(Passenger passenger) {

@@ -3,6 +3,8 @@ package com.utopia.bookingservice.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.utopia.bookingservice.entity.Booking;
 import com.utopia.bookingservice.entity.Discount;
@@ -318,5 +320,18 @@ public class PassengerService {
         return passengerRepository
                 .findDistinctByConfirmationCodeOrUsernameContaining(searchTerm,
                         pageable);
+    }
+
+    public List<Passenger> getPassengersByFlightId(Long flightId) {
+        return passengerRepository.findByFlightId(flightId);
+    }
+
+    public List<Integer> getTakenSeats(Long flightId) {
+        List<Passenger> passengers = getPassengersByFlightId(flightId);
+        List<Integer> seatList = new ArrayList<Integer>();
+        for (Passenger p: passengers) {
+            seatList.add(p.getSeatNumber());
+        }
+       return seatList;
     }
 }
