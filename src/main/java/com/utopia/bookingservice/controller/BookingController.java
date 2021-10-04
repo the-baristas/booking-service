@@ -100,12 +100,12 @@ public class BookingController {
 
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @GetMapping("bookings/search")
-    public ResponseEntity<Page<BookingResponseDto>> findBookingsByConfirmationCodeContaining(
-            @RequestParam("confirmation_code") String confirmationCode,
+    public ResponseEntity<Page<BookingResponseDto>> findByConfirmationCodeContaining(
+            @RequestParam("term") String searchTerm,
             @RequestParam("index") Integer pageIndex,
             @RequestParam("size") Integer pageSize) {
         Page<Booking> bookingsPage = bookingService
-                .findByConfirmationCodeContaining(confirmationCode, pageIndex,
+                .findByConfirmationCodeContaining(searchTerm, pageIndex,
                         pageSize);
         Page<BookingResponseDto> bookingDtosPage = bookingsPage
                 .map(this::convertToResponseDto);
@@ -182,14 +182,16 @@ public class BookingController {
 
         return ResponseEntity.ok().build();
     }
+
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
     @PutMapping("bookings/refund")
-    public ResponseEntity<BookingResponseDto> refundBooking(@RequestParam("id") Long bookingId,
-                                                            @RequestParam("refundAmount") Float refundAmount) throws StripeException {
+    public ResponseEntity<BookingResponseDto> refundBooking(
+            @RequestParam("id") Long bookingId,
+            @RequestParam("refundAmount") Float refundAmount)
+            throws StripeException {
         bookingService.refundBooking(bookingId, refundAmount.longValue());
         return ResponseEntity.ok().build();
     }
-
 
     private BookingResponseDto convertToResponseDto(Booking booking) {
         return modelMapper.map(booking, BookingResponseDto.class);
