@@ -98,7 +98,7 @@ public class PassengerController {
         return ResponseEntity.ok(passengerDtos);
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER', 'ROLE_AGENT')")
     @PostMapping
     public ResponseEntity<PassengerResponseDto> create(
             @Valid @RequestBody PassengerCreationDto passengerCreationDto,
@@ -126,7 +126,7 @@ public class PassengerController {
                 .body(createdPassengerDto);
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER', 'ROLE_AGENT')")
     @PutMapping("{id}")
     public ResponseEntity<PassengerResponseDto> update(@PathVariable Long id,
             @Valid @RequestBody PassengerUpdateDto passengerUpdateDto,
@@ -144,7 +144,7 @@ public class PassengerController {
         return ResponseEntity.ok(updatedPassengerDto);
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER', 'ROLE_AGENT')")
     @DeleteMapping("{id}")
     public ResponseEntity<Void> deleteById(@PathVariable Long id) {
         passengerService.deleteById(id);

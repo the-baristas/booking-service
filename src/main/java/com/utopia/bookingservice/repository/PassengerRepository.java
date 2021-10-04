@@ -15,7 +15,7 @@ public interface PassengerRepository extends JpaRepository<Passenger, Long> {
     Page<Passenger> findByConfirmationCodeOrUsernameContaining(
             @Param("searchTerm") String searchTerm, Pageable pageable);
 
-    @Query("SELECT DISTINCT p FROM Passenger p WHERE p.booking.confirmationCode LIKE %:searchTerm% OR p.booking.user.username LIKE %:searchTerm%")
+    @Query("SELECT DISTINCT p FROM Passenger p WHERE p.booking.confirmationCode LIKE %:searchTerm% OR p.booking.user.username LIKE %:searchTerm% OR p.booking.user.phone LIKE %:searchTerm%")
     Page<Passenger> findDistinctByConfirmationCodeOrUsernameContaining(
             @Param("searchTerm") String searchTerm, Pageable pageable);
 }

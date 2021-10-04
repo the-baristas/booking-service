@@ -6,7 +6,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,15 +16,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.utopia.bookingservice.email.EmailSender;
-import com.utopia.bookingservice.entity.Booking;
-import com.utopia.bookingservice.entity.Flight;
-import com.utopia.bookingservice.entity.Passenger;
-import com.utopia.bookingservice.entity.User;
+import com.utopia.bookingservice.entity.*;
 import com.utopia.bookingservice.repository.BookingRepository;
 import com.utopia.bookingservice.repository.UserRepository;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.engine.JupiterTestEngine;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -31,6 +32,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.junit.jupiter.api.Assertions.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceTest {
@@ -119,6 +122,8 @@ class BookingServiceTest {
                 Arrays.asList(new Booking()));
         Integer pageIndex = 0;
         Integer pageSize = 1;
+        when(userRepository.findByUsername("username"))
+                .thenReturn(Optional.of(new User()));
         when(bookingRepository.findByUsername(username,
                 PageRequest.of(pageIndex, pageSize)))
                         .thenReturn(foundBookingsPage);
@@ -127,6 +132,108 @@ class BookingServiceTest {
                 .findByUsername(username, pageIndex, pageSize);
         assertThat(returnedBookingsPage, is(foundBookingsPage));
     }
+
+    @Test
+    void findPendingFlightsByUsername_ValidUsername_BookingFound(){
+        String username = "username";
+        Booking bookingAfter = new Booking();
+        bookingAfter.setActive(true);
+        Flight flightAfter = new Flight();
+        flightAfter.setDepartureTime(LocalDateTime.now().plusDays(33L) );
+        HashSet<Flight> flightsAfter = new HashSet<>();
+        flightsAfter.add(flightAfter);
+        bookingAfter.setFlights(flightsAfter);
+
+        Booking bookingBefore = new Booking();
+        bookingBefore.setActive(true);
+        Flight flightBefore = new Flight();
+        flightBefore.setDepartureTime(LocalDateTime.now().minusDays(33L) );
+        HashSet<Flight> flightsBefore = new HashSet<>();
+        flightsBefore.add(flightBefore);
+        bookingBefore.setFlights(flightsBefore);
+
+        List<Booking> bookings = Arrays.asList(bookingAfter, bookingBefore);
+
+        Integer pageIndex = 0;
+        Integer pageSize = 1;
+        when(bookingRepository.findAllByUsername(username))
+                .thenReturn(bookings);
+        when(userRepository.findByUsername("username"))
+                .thenReturn(Optional.of(new User()));
+
+        Page<Booking> returnedBookingsPage = bookingService
+                .findPendingFlightsByUsername(username, pageIndex, pageSize);
+        assertThat(returnedBookingsPage.getTotalElements(), is(bookings.size()-1L));
+    }
+
+    @Test
+    void findByUsername_ValidUsername_withSearchTerm_BookingFound() {
+        String username = "username";
+        String searchTerm = "Alex";
+        Booking booking = new Booking();
+        Passenger passenger = new Passenger();
+        passenger.setFamilyName("Last");
+        passenger.setGivenName("Alexander");
+        booking.setPassengers(Arrays.asList(passenger));
+
+        List<Booking> bookings = Arrays.asList(booking);
+
+
+        Integer pageIndex = 0;
+        Integer pageSize = 1;
+        when(bookingRepository.findAllByUsername(username))
+                .thenReturn(bookings);
+        when(userRepository.findByUsername("username"))
+                .thenReturn(Optional.of(new User()));
+
+        Page<Booking> returnedBookingsPage = bookingService
+                .findByUsername(username, searchTerm, pageIndex, pageSize);
+        assertThat(returnedBookingsPage.getTotalElements(), is(1L));
+    }
+
+    @Test
+    void findPendingFlightsByUsername_ValidUsername_WithSearchTerm_BookingFound(){
+        String username = "username";
+        String searchTerm = "Alex";
+        Passenger passenger1 = new Passenger();
+        passenger1.setFamilyName("Last");
+        passenger1.setGivenName("Alexander");
+        Passenger passenger2 = new Passenger();
+        passenger2.setFamilyName("Nope");
+        passenger2.setGivenName("Name");
+
+        Booking bookingAfter = new Booking();
+        bookingAfter.setActive(true);
+        Flight flightAfter = new Flight();
+        flightAfter.setDepartureTime(LocalDateTime.now().plusDays(33L) );
+        HashSet<Flight> flightsAfter = new HashSet<>();
+        flightsAfter.add(flightAfter);
+        bookingAfter.setFlights(flightsAfter);
+        bookingAfter.setPassengers(Arrays.asList(passenger1));
+
+        Booking bookingBefore = new Booking();
+        bookingBefore.setActive(true);
+        Flight flightBefore = new Flight();
+        flightBefore.setDepartureTime(LocalDateTime.now().minusDays(33L) );
+        HashSet<Flight> flightsBefore = new HashSet<>();
+        flightsBefore.add(flightBefore);
+        bookingBefore.setFlights(flightsBefore);
+        bookingBefore.setPassengers(Arrays.asList(passenger1, passenger2));
+
+        List<Booking> bookings = Arrays.asList(bookingAfter, bookingBefore);
+
+        Integer pageIndex = 0;
+        Integer pageSize = 1;
+        when(bookingRepository.findAllByUsername(username))
+                .thenReturn(bookings);
+        when(userRepository.findByUsername("username"))
+                .thenReturn(Optional.of(new User()));
+
+        Page<Booking> returnedBookingsPage = bookingService
+                .findPendingFlightsByUsername(username, searchTerm, pageIndex, pageSize);
+        assertThat(returnedBookingsPage.getTotalElements(), is(bookings.size()-1L));
+    }
+
 
     @Test
     void create_ValidBooking_BookingCreated() {
@@ -245,5 +352,29 @@ class BookingServiceTest {
                 passenger1.getSeatClass(), passenger1.getFlight());
         verify(passengerService, times(1)).decrementReservedSeatsCount(
                 passenger2.getSeatClass(), passenger2.getFlight());
+    }
+
+    @Test
+    public void deleteById_Invalid(){
+        Assertions.assertThrows(ResponseStatusException.class, () -> {bookingService.deleteById(1L);});
+    }
+
+    @Test
+    public void sendEmail(){
+        Assertions.assertDoesNotThrow(() -> {bookingService.sendEmail(new Booking());});
+    }
+
+    @Test
+    public void refund_bookingAlreadyRefunded(){
+        Booking booking = new Booking();
+        booking.setId(1L);
+        Payment payment = new Payment();
+        payment.setRefunded(true);
+        booking.setPayment(payment);
+
+        when(bookingRepository.findById(booking.getId()))
+                .thenReturn(Optional.of(booking));
+
+        Assertions.assertDoesNotThrow(() -> {bookingService.refundBooking(booking.getId(), 100L);});
     }
 }

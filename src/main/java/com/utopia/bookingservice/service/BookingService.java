@@ -1,6 +1,8 @@
 package com.utopia.bookingservice.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -13,6 +15,7 @@ import com.utopia.bookingservice.repository.BookingRepository;
 import com.utopia.bookingservice.repository.UserRepository;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -52,12 +55,90 @@ public class BookingService {
 
     public Page<Booking> findByUsername(String username, Integer pageIndex,
             Integer pageSize) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "A user with this username does not exist: " + username));
+
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
         try {
             return bookingRepository.findByUsername(username, pageable);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Could not find booking with username: " + username);
+        }
+    }
+
+    public Page<Booking> findByUsername(String username, String searchTerm, Integer pageIndex, Integer pageSize){
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "A user with this username does not exist: " + username));
+
+        try {
+            //get all the bookings made by this username, then filter it based on the search term.
+            //a booking will be returned if any passenger's name in the booking contains the search term
+            List<Booking> allFilteredBookings = bookingRepository.findAllByUsername(username)
+                    .stream().filter(
+                            (booking) -> {
+                                 for(Passenger p : booking.getPassengers())
+                                     if((p.getGivenName() + p.getFamilyName() ).toLowerCase().contains(searchTerm.toLowerCase()))
+                                         return true;
+                                 return false;
+                            }
+                    )
+                    .collect(Collectors.toList());
+
+            return new PageImpl<Booking>(allFilteredBookings, PageRequest.of(pageIndex, pageSize), allFilteredBookings.size());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Could not find bookings with username: " + username);
+        }
+    }
+
+    public Page<Booking> findPendingFlightsByUsername(String username, Integer pageIndex, Integer pageSize){
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "A user with this username does not exist: " + username));
+
+        try {
+
+            LocalDateTime now = LocalDateTime.now();
+            List<Booking> allPendingBookings = bookingRepository.findAllByUsername(username)
+                    .stream().filter(
+                            booking -> booking
+                                    .findEarliestDepartingFlight()
+                                    .getDepartureTime().isAfter(now) && booking.getActive()
+                            )
+                    .collect(Collectors.toList());
+
+            return new PageImpl<Booking>(allPendingBookings, PageRequest.of(pageIndex, pageSize), allPendingBookings.size());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Could not find bookings with username: " + username);
+        }
+    }
+
+    public Page<Booking> findPendingFlightsByUsername(String username, String searchTerm, Integer pageIndex, Integer pageSize){
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "A user with this username does not exist: " + username));
+
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            List<Booking> allPendingBookings = bookingRepository.findAllByUsername(username)
+                    .stream().filter(
+                            booking -> booking
+                                    .findEarliestDepartingFlight()
+                                    .getDepartureTime().isAfter(now) && booking.getActive()
+                    ).filter(
+                            (booking) -> {
+                                for(Passenger p : booking.getPassengers())
+                                    if((p.getGivenName() + p.getFamilyName() ).toLowerCase().contains(searchTerm.toLowerCase()))
+                                        return true;
+                                return false;
+                            }
+                    )
+                    .collect(Collectors.toList());
+
+            return new PageImpl<Booking>(allPendingBookings, PageRequest.of(pageIndex, pageSize), allPendingBookings.size());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Could not find bookings with username: " + username);
         }
     }
 

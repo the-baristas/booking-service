@@ -46,7 +46,7 @@ public class PaymentController {
         return ResponseEntity.ok(paymentDto);
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER', 'ROLE_AGENT')")
     @PostMapping("/payment-intent")
     public ResponseEntity<Map<String, String>> createPaymentIntent(
             @Valid @RequestBody PaymentIntentInfoDto paymentInfo,

@@ -183,6 +183,80 @@ public class BookingControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = { "ROLE_ADMIN" })
+    public void findByUsername_ValidUsername_WithSearchTerm_BookingsFound()
+            throws JsonProcessingException {
+        Booking foundBooking = new Booking();
+        String username = "username";
+        Integer pageIndex = 0;
+        Integer pageSize = 1;
+        String searchTerm = "term";
+        Page<Booking> foundBookingsPage = new PageImpl<Booking>(
+                Arrays.asList(foundBooking));
+        when(bookingService.findByUsername(username, searchTerm, pageIndex, pageSize))
+                .thenReturn(foundBookingsPage);
+
+        Page<BookingResponseDto> foundBookingDtosPage = foundBookingsPage.map(
+                (Booking b) -> modelMapper.map(b, BookingResponseDto.class));
+
+        webTestClient.get().uri(
+                "/bookings/username/{username}?index={pageIndex}&size={pageSize}&term={searchTerm}",
+                username, pageIndex, pageSize, searchTerm).header("Authorization", jwtToken)
+                .exchange().expectStatus().isOk().expectBody(String.class)
+                .isEqualTo(
+                        objectMapper.writeValueAsString(foundBookingDtosPage));
+    }
+
+    @Test
+    @WithMockUser(authorities = { "ROLE_ADMIN" })
+    public void findByUsername_ValidUsername_PendingOnlyTrue_BookingsFound()
+            throws JsonProcessingException {
+        Booking foundBooking = new Booking();
+        String username = "username";
+        Integer pageIndex = 0;
+        Integer pageSize = 1;
+        Page<Booking> foundBookingsPage = new PageImpl<Booking>(
+                Arrays.asList(foundBooking));
+        when(bookingService.findPendingFlightsByUsername(username, pageIndex, pageSize))
+                .thenReturn(foundBookingsPage);
+
+        Page<BookingResponseDto> foundBookingDtosPage = foundBookingsPage.map(
+                (Booking b) -> modelMapper.map(b, BookingResponseDto.class));
+
+        webTestClient.get().uri(
+                "/bookings/username/{username}?index={pageIndex}&size={pageSize}&pendingOnly=true",
+                username, pageIndex, pageSize).header("Authorization", jwtToken)
+                .exchange().expectStatus().isOk().expectBody(String.class)
+                .isEqualTo(
+                        objectMapper.writeValueAsString(foundBookingDtosPage));
+    }
+
+    @Test
+    @WithMockUser(authorities = { "ROLE_ADMIN" })
+    public void findByUsername_ValidUsername_PendingOnlyTrue_WithSearchTerm_BookingsFound()
+            throws JsonProcessingException {
+        Booking foundBooking = new Booking();
+        String username = "username";
+        Integer pageIndex = 0;
+        Integer pageSize = 1;
+        String searchTerm = "term";
+        Page<Booking> foundBookingsPage = new PageImpl<Booking>(
+                Arrays.asList(foundBooking));
+        when(bookingService.findPendingFlightsByUsername(username, searchTerm, pageIndex, pageSize))
+                .thenReturn(foundBookingsPage);
+
+        Page<BookingResponseDto> foundBookingDtosPage = foundBookingsPage.map(
+                (Booking b) -> modelMapper.map(b, BookingResponseDto.class));
+
+        webTestClient.get().uri(
+                "/bookings/username/{username}?index={pageIndex}&size={pageSize}&pendingOnly=true&term={searchTerm}",
+                username, pageIndex, pageSize, searchTerm).header("Authorization", jwtToken)
+                .exchange().expectStatus().isOk().expectBody(String.class)
+                .isEqualTo(
+                        objectMapper.writeValueAsString(foundBookingDtosPage));
+    }
+
+    @Test
     @WithMockUser(authorities = { "ROLE_CUSTOMER" })
     public void create_ValidBookingCreationDto_BookingCreated()
             throws JsonProcessingException {
