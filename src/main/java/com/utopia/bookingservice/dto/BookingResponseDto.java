@@ -50,4 +50,10 @@ public class BookingResponseDto {
 
     @NotNull
     private List<PassengerResponseDto> passengers;
+
+    @NotBlank
+    private String stripeId;
+
+    @NotNull
+    private Boolean refunded;
 }

@@ -100,12 +100,12 @@ public class BookingController {
 
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @GetMapping("bookings/search")
-    public ResponseEntity<Page<BookingResponseDto>> findBookingsByConfirmationCodeContaining(
-            @RequestParam("confirmation_code") String confirmationCode,
+    public ResponseEntity<Page<BookingResponseDto>> findByConfirmationCodeContaining(
+            @RequestParam("term") String searchTerm,
             @RequestParam("index") Integer pageIndex,
             @RequestParam("size") Integer pageSize) {
         Page<Booking> bookingsPage = bookingService
-                .findByConfirmationCodeContaining(confirmationCode, pageIndex,
+                .findByConfirmationCodeContaining(searchTerm, pageIndex,
                         pageSize);
         Page<BookingResponseDto> bookingDtosPage = bookingsPage
                 .map(this::convertToResponseDto);
@@ -118,24 +118,28 @@ public class BookingController {
             @PathVariable("username") String username,
             @RequestParam("index") Integer pageIndex,
             @RequestParam("size") Integer pageSize,
-            @RequestParam(name="pendingOnly", defaultValue="false") Boolean pendingOnly,
-            @RequestParam(name="term", defaultValue="") String searchTerm,
+            @RequestParam(name = "pendingOnly",
+                    defaultValue = "false") Boolean pendingOnly,
+            @RequestParam(name = "term", defaultValue = "") String searchTerm,
             @RequestHeader("Authorization") String bearerToken) {
         checkUsernameRequestMatchesResponse(bearerToken, username);
 
         Page<Booking> bookingsPage;
 
-        if(!pendingOnly){
-            if(searchTerm.equals(""))
-                bookingsPage = bookingService.findByUsername(username, pageIndex, pageSize);
+        if (!pendingOnly) {
+            if (searchTerm.equals(""))
+                bookingsPage = bookingService.findByUsername(username,
+                        pageIndex, pageSize);
             else
-                bookingsPage = bookingService.findByUsername(username, searchTerm, pageIndex, pageSize);
-        }
-        else{
-            if(searchTerm.equals(""))
-                bookingsPage = bookingService.findPendingFlightsByUsername(username, pageIndex, pageSize);
+                bookingsPage = bookingService.findByUsername(username,
+                        searchTerm, pageIndex, pageSize);
+        } else {
+            if (searchTerm.equals(""))
+                bookingsPage = bookingService.findPendingFlightsByUsername(
+                        username, pageIndex, pageSize);
             else
-                bookingsPage = bookingService.findPendingFlightsByUsername(username, searchTerm, pageIndex, pageSize);
+                bookingsPage = bookingService.findPendingFlightsByUsername(
+                        username, searchTerm, pageIndex, pageSize);
         }
 
         return ResponseEntity.ok(bookingsPage.map(this::convertToResponseDto));
@@ -196,14 +200,16 @@ public class BookingController {
 
         return ResponseEntity.ok().build();
     }
+
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER', 'ROLE_AGENT')")
     @PutMapping("bookings/refund")
-    public ResponseEntity<BookingResponseDto> refundBooking(@RequestParam("id") Long bookingId,
-                                                            @RequestParam("refundAmount") Float refundAmount) throws StripeException {
+    public ResponseEntity<BookingResponseDto> refundBooking(
+            @RequestParam("id") Long bookingId,
+            @RequestParam("refundAmount") Float refundAmount)
+            throws StripeException {
         bookingService.refundBooking(bookingId, refundAmount.longValue());
         return ResponseEntity.ok().build();
     }
-
 
     private BookingResponseDto convertToResponseDto(Booking booking) {
         return modelMapper.map(booking, BookingResponseDto.class);
@@ -217,8 +223,7 @@ public class BookingController {
             String username = jwt.getSubject();
 
             Claim claim = jwt.getClaim("authorities");
-
-            @SuppressWarnings("rawtypes") List<HashMap> authorities = claim.asList(HashMap.class);
+            List<HashMap> authorities = claim.asList(HashMap.class);
             String role = (String) authorities.get(0).get("authority");
 
             if (!role.contains("ADMIN") && !username.equals(responseUsername)) {
