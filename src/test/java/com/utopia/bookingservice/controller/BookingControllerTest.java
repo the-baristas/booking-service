@@ -145,7 +145,7 @@ public class BookingControllerTest {
         Page<BookingResponseDto> foundBookingDtosPage = foundBookingsPage.map(
                 (Booking b) -> modelMapper.map(b, BookingResponseDto.class));
         webTestClient.get().uri(
-                "/bookings/search?confirmation_code={searchTerm}&index={pageIndex}&size={pageSize}",
+                "/bookings/search?term={searchTerm}&index={pageIndex}&size={pageSize}",
                 searchTerm, pageIndex, pageSize).exchange().expectStatus()
                 .isOk().expectBody(String.class).isEqualTo(
                         objectMapper.writeValueAsString(foundBookingDtosPage));
