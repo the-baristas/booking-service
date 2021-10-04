@@ -112,32 +112,36 @@ public class BookingController {
         return ResponseEntity.ok(bookingDtosPage);
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER', 'ROLE_AGENT')")
     @GetMapping("bookings/username/{username}")
     public ResponseEntity<Page<BookingResponseDto>> findByUsername(
             @PathVariable("username") String username,
             @RequestParam("index") Integer pageIndex,
             @RequestParam("size") Integer pageSize,
             @RequestParam(name="pendingOnly", defaultValue="false") Boolean pendingOnly,
+            @RequestParam(name="term", defaultValue="") String searchTerm,
             @RequestHeader("Authorization") String bearerToken) {
         checkUsernameRequestMatchesResponse(bearerToken, username);
 
         Page<Booking> bookingsPage;
 
         if(!pendingOnly){
-            bookingsPage = bookingService.findByUsername(username,
-                    pageIndex, pageSize);
+            if(searchTerm.equals(""))
+                bookingsPage = bookingService.findByUsername(username, pageIndex, pageSize);
+            else
+                bookingsPage = bookingService.findByUsername(username, searchTerm, pageIndex, pageSize);
         }
         else{
-            bookingsPage = bookingService.findPendingFlightsByUsername(username,
-                    pageIndex, pageSize);
+            if(searchTerm.equals(""))
+                bookingsPage = bookingService.findPendingFlightsByUsername(username, pageIndex, pageSize);
+            else
+                bookingsPage = bookingService.findPendingFlightsByUsername(username, searchTerm, pageIndex, pageSize);
         }
 
-        return ResponseEntity.ok(bookingsPage
-                .map(this::convertToResponseDto));
+        return ResponseEntity.ok(bookingsPage.map(this::convertToResponseDto));
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER', 'ROLE_AGENT')")
     @PostMapping("bookings")
     public ResponseEntity<BookingResponseDto> create(
             @Valid @RequestBody BookingCreationDto bookingCreationDto,
@@ -154,7 +158,7 @@ public class BookingController {
                 .body(createdBookingDto);
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER', 'ROLE_AGENT')")
     @PutMapping("bookings/{id}")
     public ResponseEntity<BookingResponseDto> update(@PathVariable Long id,
             @Valid @RequestBody BookingUpdateDto bookingUpdateDto) {
@@ -168,7 +172,7 @@ public class BookingController {
         return ResponseEntity.ok(updatedBookingDto);
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER', 'ROLE_AGENT')")
     @DeleteMapping("bookings/{id}")
     public ResponseEntity<Void> deleteById(@PathVariable Long id)
             throws ModelMapperFailedException {
@@ -176,7 +180,7 @@ public class BookingController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER', 'ROLE_AGENT')")
     @GetMapping("bookings/email/{confirmationCode}")
     public ResponseEntity<Void> sendBookingEmail(
             @PathVariable String confirmationCode,
@@ -192,7 +196,7 @@ public class BookingController {
 
         return ResponseEntity.ok().build();
     }
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER', 'ROLE_AGENT')")
     @PutMapping("bookings/refund")
     public ResponseEntity<BookingResponseDto> refundBooking(@RequestParam("id") Long bookingId,
                                                             @RequestParam("refundAmount") Float refundAmount) throws StripeException {
