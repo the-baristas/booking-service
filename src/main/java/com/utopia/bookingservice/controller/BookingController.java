@@ -118,13 +118,23 @@ public class BookingController {
             @PathVariable("username") String username,
             @RequestParam("index") Integer pageIndex,
             @RequestParam("size") Integer pageSize,
+            @RequestParam(name="pendingOnly", defaultValue="false") Boolean pendingOnly,
             @RequestHeader("Authorization") String bearerToken) {
         checkUsernameRequestMatchesResponse(bearerToken, username);
-        Page<Booking> bookingsPage = bookingService.findByUsername(username,
-                pageIndex, pageSize);
-        Page<BookingResponseDto> bookingDtosPage = bookingsPage
-                .map(this::convertToResponseDto);
-        return ResponseEntity.ok(bookingDtosPage);
+
+        Page<Booking> bookingsPage;
+
+        if(!pendingOnly){
+            bookingsPage = bookingService.findByUsername(username,
+                    pageIndex, pageSize);
+        }
+        else{
+            bookingsPage = bookingService.findPendingFlightsByUsername(username,
+                    pageIndex, pageSize);
+        }
+
+        return ResponseEntity.ok(bookingsPage
+                .map(this::convertToResponseDto));
     }
 
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER')")
@@ -203,7 +213,8 @@ public class BookingController {
             String username = jwt.getSubject();
 
             Claim claim = jwt.getClaim("authorities");
-            List<HashMap> authorities = claim.asList(HashMap.class);
+
+            @SuppressWarnings("rawtypes") List<HashMap> authorities = claim.asList(HashMap.class);
             String role = (String) authorities.get(0).get("authority");
 
             if (!role.contains("ADMIN") && !username.equals(responseUsername)) {

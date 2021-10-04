@@ -25,7 +25,13 @@ public class FlightDto {
     private LocalDateTime departureTime;
 
     @NotNull
+    private String departureGate;
+
+    @NotNull
     private LocalDateTime arrivalTime;
+
+    @NotNull
+    private String arrivalGate;
 
     @Positive
     private Long routeId;
