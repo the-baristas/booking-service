@@ -2,14 +2,17 @@ package com.utopia.bookingservice.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
 import com.stripe.exception.StripeException;
+import com.utopia.bookingservice.dto.BookingPurchaseDto;
 import com.utopia.bookingservice.email.EmailSender;
 import com.utopia.bookingservice.entity.Booking;
 import com.utopia.bookingservice.entity.Passenger;
+import com.utopia.bookingservice.entity.Payment;
 import com.utopia.bookingservice.entity.User;
 import com.utopia.bookingservice.repository.BookingRepository;
 import com.utopia.bookingservice.repository.UserRepository;
@@ -147,7 +150,7 @@ public class BookingService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "User not found with username: " + username));
         bookingToCreate.setUser(user);
-
+        bookingToCreate.setConfirmationCode(UUID.randomUUID().toString());
         bookingToCreate.setTotalPrice(0d);
         try {
             return bookingRepository.save(bookingToCreate);
@@ -215,6 +218,24 @@ public class BookingService {
 
         // call paymentService to refund stripe payment
         paymentService.refundPayment(booking.getPayment(), refundAmount);
+    }
+
+    @Transactional
+    public Booking purchaseBooking(List<Passenger> passengers, Integer layoverCount, Long totalPrice, String username, String stripeId){
+        Booking newBooking = new Booking();
+        newBooking.setLayoverCount(layoverCount);
+        newBooking = create(username, newBooking);
+
+        for (Passenger passenger : passengers) {
+            passenger.setBooking(newBooking);
+            passengerService.create(passenger);
+        }
+
+        Payment payment = new Payment(newBooking, stripeId, false);
+
+        update(newBooking.getId(), newBooking.getConfirmationCode(), true, layoverCount, totalPrice.doubleValue());
+        paymentService.createPayment(payment);
+        return newBooking;
     }
 
     private void incrementReservedSeatsCounts(List<Passenger> passengers) {

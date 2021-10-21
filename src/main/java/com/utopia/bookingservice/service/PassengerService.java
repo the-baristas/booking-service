@@ -86,6 +86,19 @@ public class PassengerService {
         }
     }
 
+    //Create a passenger with all fields already filled in
+    public Passenger create(Passenger passengerToCreate){
+        try {
+            incrementReservedSeatsCount(passengerToCreate.getSeatClass(), passengerToCreate.getFlight());
+            return passengerRepository.save(passengerToCreate);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Could not create passenger with id="
+                            + passengerToCreate.getId(),
+                    e);
+        }
+    }
+
     private Flight getFlight(String originAirportCode,
             String destinationAirportCode, String airplaneModel,
             LocalDateTime departureTime, LocalDateTime arrivalTime) {
