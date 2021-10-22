@@ -22,6 +22,7 @@ import com.utopia.bookingservice.entity.Booking;
 import com.utopia.bookingservice.entity.User;
 import com.utopia.bookingservice.service.BookingService;
 
+import com.utopia.bookingservice.service.FlightService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
@@ -50,6 +51,9 @@ public class BookingControllerTest {
 
     @MockBean
     private BookingService bookingService;
+
+    @MockBean
+    private FlightService flightService;
 
     @Value("${jwt.secret-key")
     private String jwtSecretKey;
