@@ -3,7 +3,6 @@ pipeline {
     environment {
         COMMIT_HASH = "${sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()}"
         ECR_REGISTRY_URI = "135316859264.dkr.ecr.us-east-2.amazonaws.com"
-        S3_URI = "s3://cloudformation-us-east-2-135316859264/booking-service-stack/cloudformation.template"
         SERVICE_NAME = "booking-service"
     }
     stages {
@@ -38,15 +37,13 @@ pipeline {
                 sh "docker push ${ECR_REGISTRY_URI}/${SERVICE_NAME}:${COMMIT_HASH}"
             }
         }
-        stage('CloudFormation Deploy') {
-            steps {
-                echo 'Fetching CloudFormation template..'
-                sh "aws s3 cp ${S3_URI} ./"
-                echo 'Deploying CloudFormation..'
-                sh "aws cloudformation deploy --stack-name ${SERVICE_NAME}-stack --template-file ./cloudformation.template  --parameter-overrides EcrImageUri=${ECR_REGISTRY_URI}/${SERVICE_NAME}:${COMMIT_HASH} --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --region us-east-2"
-
+            stage('Deploy') {
+              steps {
+                
+                echo 'Deploying cloudformation..'
+                sh "aws cloudformation deploy --stack-name ${SERVICE_NAME}-stack --template-file ./bookingServiceECS.yml --parameter-overrides ApplicationName=${SERVICE_NAME} EcrImageUri=${ECR_REGISTRY_URI}/${SERVICE_NAME}:${COMMIT_HASH} --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --region us-east-2"
+              }
             }
-        }
     }
     post {
         always {
