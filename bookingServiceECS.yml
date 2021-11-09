@@ -80,7 +80,7 @@ Resources:
               Value: '{{resolve:secretsmanager:mysql-username:SecretString:username}}'
             - Name: LOCAL_MYSQL_PASSWORD
               Value: '{{resolve:secretsmanager:mysql-password:SecretString:password}}'
-            - Name: JWT_KEY
+            - Name: JWT_SECRET_KEY
               Value: '{{resolve:secretsmanager:jwt-secret-key:SecretString:jwt-secret-key}}'
             - Name: AWS_EMAIL_SENDER
               Value: '{{resolve:secretsmanager:aws-email-sender:SecretString:aws-email-sender}}'
