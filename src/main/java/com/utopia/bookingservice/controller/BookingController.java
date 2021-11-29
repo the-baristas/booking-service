@@ -1,5 +1,6 @@
 package com.utopia.bookingservice.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -10,10 +11,10 @@ import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.stripe.exception.StripeException;
-import com.utopia.bookingservice.dto.BookingCreationDto;
-import com.utopia.bookingservice.dto.BookingResponseDto;
-import com.utopia.bookingservice.dto.BookingUpdateDto;
+import com.utopia.bookingservice.dto.*;
 import com.utopia.bookingservice.entity.Booking;
+import com.utopia.bookingservice.entity.Discount;
+import com.utopia.bookingservice.entity.Passenger;
 import com.utopia.bookingservice.exception.ModelMapperFailedException;
 import com.utopia.bookingservice.propertymap.BookingCreationDtoMap;
 import com.utopia.bookingservice.propertymap.BookingMap;
@@ -21,6 +22,7 @@ import com.utopia.bookingservice.propertymap.FlightMap;
 import com.utopia.bookingservice.security.JwtUtils;
 import com.utopia.bookingservice.service.BookingService;
 
+import com.utopia.bookingservice.service.FlightService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -56,14 +58,16 @@ public class BookingController {
     private static final Double SEAT_CLASS_UPGRADE_RATE = 0.15;
 
     private final BookingService bookingService;
+    private final FlightService flightService;
     private final ModelMapper modelMapper;
 
     @Value("${jwt.secret-key}")
     private String jwtSecretKey;
 
-    public BookingController(BookingService bookingService,
+    public BookingController(BookingService bookingService, FlightService flightService,
             ModelMapper modelMapper) {
         this.bookingService = bookingService;
+        this.flightService = flightService;
         this.modelMapper = modelMapper;
         this.modelMapper.addMappings(new BookingMap());
         this.modelMapper.addMappings(new BookingCreationDtoMap());
@@ -209,6 +213,44 @@ public class BookingController {
             throws StripeException {
         bookingService.refundBooking(bookingId, refundAmount.longValue());
         return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_CUSTOMER', 'ROLE_AGENT')")
+    @PostMapping("bookings/purchase")
+    public ResponseEntity<BookingResponseDto> purchaseBooking(
+            @Valid @RequestBody BookingPurchaseDto bookingPurchaseDto,
+            UriComponentsBuilder builder) {
+
+        //Right now does not incorporate discounts
+        Discount discount = new Discount();
+        discount.setDiscountType("none");
+        discount.setDiscountRate(1d);
+
+        List<Passenger> passengers = new ArrayList<>();
+        for (PassengerPurchaseDto passengerDto : bookingPurchaseDto.getPassengers()) {
+            Passenger passenger = new Passenger();
+            passenger.setGivenName(passengerDto.getGivenName());
+            passenger.setFamilyName(passengerDto.getFamilyName());
+            passenger.setAddress(passengerDto.getAddress());
+            passenger.setFlight(flightService.findById(passengerDto.getFlightId()));
+            passenger.setDateOfBirth(passengerDto.getDateOfBirth());
+            passenger.setCheckInGroup(passengerDto.getCheckInGroup());
+            passenger.setSeatNumber(passengerDto.getSeatNumber());
+            passenger.setSeatClass(passengerDto.getSeatClass());
+            passenger.setGender(passengerDto.getGender());
+            passenger.setDiscount(discount);
+
+            passengers.add(passenger);
+        }
+
+        Booking createdBooking = bookingService.purchaseBooking(passengers, bookingPurchaseDto.getLayoverCount(),
+                                bookingPurchaseDto.getTotalPrice(), bookingPurchaseDto.getUsername(), bookingPurchaseDto.getStripeId());
+
+        BookingResponseDto createdBookingDto = convertToResponseDto(createdBooking);
+        createdBookingDto.setRefunded(false);
+        createdBookingDto.setStripeId(bookingPurchaseDto.getStripeId());
+        return ResponseEntity.created(builder.path("/bookings/{id}").build(createdBookingDto.getId()))
+                .body(createdBookingDto);
     }
 
     private BookingResponseDto convertToResponseDto(Booking booking) {
